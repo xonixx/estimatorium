@@ -1,0 +1,53 @@
+team:
+  fe:
+    title: "Front dev"
+    rate: 40
+  be:
+    title: "Back dev"
+    rate: 50
+    count: 2
+  qa:
+    rate: 35
+    formula: "(fe + be)*0.3"
+  pm:
+    rate: 50
+    formula: "fe * 0.3"
+
+time_unit: day # hr
+
+risks:
+  low: 1.1
+  medium: 1.5
+  high: 2
+
+tasks:
+  - cat: Initial
+    tasks:
+      - title: "Task 1"
+        be: 2
+        fe: 5
+        risk: low
+
+      - title: "Some task 1"
+        be: 2
+        fe: 5
+        risk: high
+
+  - cat: Initial
+    title: "Task 1"
+    be: 2
+    fe: 5
+    risk: low
+
+  - cat: API
+    title: "Some task 1"
+    be: 2
+    fe: 5
+    risk: high
+
+  - cat: API
+    title: "Some task 2"
+    be: 2
+    fe: 5 # no risk
+
+
