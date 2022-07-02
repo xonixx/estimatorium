@@ -53,6 +53,23 @@ func GenerateExcel(project Project, fileName string) {
 
 func generateTasksTable(exc *excelGenerator, project Project) {
 	generateTasksTableHeader(exc, project)
+	for _, t := range project.Tasks {
+		exc.setVal(t.Category)
+		exc.next()
+		exc.setVal(t.Title)
+		exc.next()
+		for _, r := range project.Team {
+			exc.setVal(t.Work[r.Id])
+			exc.next()
+		}
+		exc.setVal(t.Risk)
+		exc.next()
+		for _, r := range project.Team {
+			exc.setVal(t.Work[r.Id]) // TODO
+			exc.next()
+		}
+		exc.cr()
+	}
 }
 
 func generateTasksTableHeader(exc *excelGenerator, project Project) {
