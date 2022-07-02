@@ -20,7 +20,10 @@ func main() {
 		},
 		Tasks: []estimatorium.Task{
 			{Category: "Initial", Title: "Task 1", Risk: "low", Work: map[string]float32{"be": 2, "fe": 5}},
+			{Category: "Feature 2", Title: "Task 1", Risk: "low", Work: map[string]float32{"be": 2, "fe": 5}},
+			{Category: "Feature 2", Title: "Task 1", Risk: "low", Work: map[string]float32{"be": 2, "fe": 5}},
 			{Category: "API", Title: "Some Task 2", Risk: "high", Work: map[string]float32{"be": 5, "fe": 1}},
+			{Category: "API", Title: "Some Task 3", Work: map[string]float32{"be": 3, "fe": 3}},
 			{Category: "API", Title: "Some Task 3", Work: map[string]float32{"be": 3, "fe": 3}},
 		},
 	}

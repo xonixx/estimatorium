@@ -54,9 +54,33 @@ func GenerateExcel(project Project, fileName string) {
 
 func generateTasksTable(exc *excelGenerator, project Project) {
 	generateTasksTableHeader(exc, project)
-	for _, t := range project.Tasks {
+
+	startCatCell := ""
+	endCatCell := ""
+	currCat := ""
+
+	for i, t := range project.Tasks {
 		exc.setVal(t.Category)
+
+		if i == 0 {
+			startCatCell = exc.cellName()
+			endCatCell = exc.cellName()
+			currCat = t.Category
+		} else if currCat != t.Category {
+			fmt.Printf("merging: %s, %s\n", startCatCell, endCatCell)
+			err := exc.f.MergeCell(exc.sheet, startCatCell, endCatCell)
+			if err != nil {
+				panic(err)
+			}
+			currCat = t.Category
+			startCatCell = exc.cellName()
+			endCatCell = exc.cellName()
+		} else {
+			endCatCell = exc.cellName()
+		}
+
 		exc.next()
+
 		exc.setVal(t.Title)
 		c1 := exc.cellName()
 		exc.next()
@@ -81,6 +105,11 @@ func generateTasksTable(exc *excelGenerator, project Project) {
 			exc.next()
 		}
 		exc.cr()
+	}
+	fmt.Printf("merging: %s, %s\n", startCatCell, endCatCell)
+	err := exc.f.MergeCell(exc.sheet, startCatCell, endCatCell)
+	if err != nil {
+		panic(err)
 	}
 }
 
