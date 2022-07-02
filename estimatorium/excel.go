@@ -1,5 +1,6 @@
 package estimatorium
 
+// TODO auto-fit to width https://github.com/qax-os/excelize/issues/92
 import (
 	"fmt"
 	"github.com/xuri/excelize/v2"
@@ -30,6 +31,11 @@ func (exc *excelGenerator) setVal(val interface{}) {
 }
 func (exc *excelGenerator) setValAndNext(val interface{}) {
 	exc.setVal(val)
+	exc.next()
+}
+func (exc *excelGenerator) setFormulaAndNext(formula string) {
+	checkErr(exc.f.SetCellFormula(exc.sheet, exc.cellName(), formula))
+	//fmt.Println(exc.f.GetCellFormula(exc.sheet, exc.cellName()))
 	exc.next()
 }
 
@@ -64,9 +70,9 @@ func newExcelGenerator() *excelGenerator {
 
 func GenerateExcel(project Project, fileName string) {
 	exc := newExcelGenerator()
-	generateTasksTable(exc, project)
+	taskTableInfo := generateTasksTable(exc, project)
 	exc.cr()
-	generateCostsTable(exc, project)
+	generateCostsTable(exc, project, taskTableInfo)
 	//exc.cr()
 	//exc.next()
 	//exc.setVal(100)
@@ -75,8 +81,15 @@ func GenerateExcel(project Project, fileName string) {
 	}
 }
 
-func generateTasksTable(exc *excelGenerator, project Project) {
+type tasksTableInfo struct {
+	cellRanges         map[string]*cellRange
+	cellRangesWithRisk map[string]*cellRange
+}
+
+func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 	generateTasksTableHeader(exc, project)
+
+	res := tasksTableInfo{cellRanges: map[string]*cellRange{}, cellRangesWithRisk: map[string]*cellRange{}}
 
 	startCatCell := ""
 	endCatCell := ""
@@ -106,33 +119,41 @@ func generateTasksTable(exc *excelGenerator, project Project) {
 		exc.next()
 		v := map[string]string{}
 		for _, r := range project.Team {
+			if i == 0 {
+				res.cellRanges[r.Id] = &cellRange{hCell: exc.cellName()}
+			} else if i == len(project.Tasks)-1 {
+				res.cellRanges[r.Id].vCell = exc.cellName()
+			}
 			v[r.Id] = exc.cellName()
 			exc.setValAndNext(t.Work[r.Id])
 		}
 		riskCell := exc.cellName()
 		exc.setValAndNext(t.Risk)
 		for _, r := range project.Team {
-			//exc.setVal(t.Work[r.Id]) // TODO
-			err := exc.f.SetCellFormula(exc.sheet, exc.cellName(), risksFormula(project.Risks, v[r.Id], riskCell))
-			//fmt.Println(exc.f.GetCellFormula(exc.sheet, exc.cellName()))
-			if err != nil {
-				panic(err)
+			if i == 0 {
+				res.cellRangesWithRisk[r.Id] = &cellRange{hCell: exc.cellName()}
+			} else if i == len(project.Tasks)-1 {
+				res.cellRangesWithRisk[r.Id].vCell = exc.cellName()
 			}
-			exc.next()
+			//exc.setVal(t.Work[r.Id]) // TODO
+			exc.setFormulaAndNext(risksFormula(project.Risks, v[r.Id], riskCell))
+			//fmt.Println(exc.f.GetCellFormula(exc.sheet, exc.cellName()))
 		}
 		exc.cr()
 	}
 	fmt.Printf("merging: %s, %s\n", startCatCell, endCatCell)
 	checkErr(exc.f.MergeCell(exc.sheet, startCatCell, endCatCell))
+
+	return res
 }
 
-func generateCostsTable(exc *excelGenerator, project Project) {
+func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tasksTableInfo) {
 	generateCostsTableHeader(exc, project)
 	for _, r := range project.Team {
 		exc.setCellStyle(exc.cellName(), exc.cellName(), headerStyle(exc))
 		exc.setValAndNext(r.Title)
-		exc.setValAndNext("TODO")
-		exc.setValAndNext("TODO")
+		exc.setFormulaAndNext(tasksTableInfo.cellRanges[r.Id].sumFormula())
+		exc.setFormulaAndNext(tasksTableInfo.cellRangesWithRisk[r.Id].sumFormula())
 		exc.setValAndNext(r.Rate) // TODO fmt $
 		exc.setValAndNext(r.Count)
 		exc.setValAndNext("TODO")
@@ -187,6 +208,14 @@ func generateTasksTableHeader(exc *excelGenerator, project Project) {
 	}
 
 	generateHeader(exc, cols)
+}
+
+type cellRange struct {
+	hCell, vCell string
+}
+
+func (cellRange cellRange) sumFormula() string {
+	return fmt.Sprintf("=SUM(%s:%s)", cellRange.hCell, cellRange.vCell)
 }
 
 type headerCell struct {
