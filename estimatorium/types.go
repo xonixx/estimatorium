@@ -51,3 +51,11 @@ type Task struct {
 	Risk     string
 	Work     map[string]float32 // resource -> time units
 }
+
+func StandardRisks() map[string]float32 {
+	return map[string]float32{
+		"low":    1.1,
+		"medium": 1.5,
+		"high":   2,
+	}
+}
