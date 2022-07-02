@@ -3,6 +3,7 @@ package estimatorium
 import (
 	"fmt"
 	"github.com/xuri/excelize/v2"
+	"strings"
 )
 
 type excelGenerator struct {
@@ -58,18 +59,45 @@ func generateTasksTable(exc *excelGenerator, project Project) {
 		exc.next()
 		exc.setVal(t.Title)
 		exc.next()
+		v := map[string]string{}
 		for _, r := range project.Team {
+			v[r.Id] = exc.cellName()
 			exc.setVal(t.Work[r.Id])
 			exc.next()
 		}
+		riskCell := exc.cellName()
 		exc.setVal(t.Risk)
 		exc.next()
 		for _, r := range project.Team {
-			exc.setVal(t.Work[r.Id]) // TODO
+			//exc.setVal(t.Work[r.Id]) // TODO
+			err := exc.f.SetCellFormula(exc.sheet, exc.cellName(), risksFormula(project.Risks, v[r.Id], riskCell))
+			//fmt.Println(exc.f.GetCellFormula(exc.sheet, exc.cellName()))
+			if err != nil {
+				panic(err)
+			}
 			exc.next()
 		}
 		exc.cr()
 	}
+}
+
+func risksFormula(risks map[string]float32, valCell string, risksCell string) string {
+	// =ROUNDUP(D6*SWITCH($F6,"",1, "Low", 1.1, "Medium", 1.5, "High", 2, "Extreme", 5))
+	var sb strings.Builder
+	sb.WriteString("=ROUNDUP(")
+	sb.WriteString(valCell)
+	sb.WriteString("*_xlfn.SWITCH(")
+	sb.WriteString(risksCell)
+	sb.WriteString(",\"\",1")
+	for k, v := range risks {
+		sb.WriteString(",\"")
+		sb.WriteString(k)
+		sb.WriteString("\",")
+		sb.WriteString(fmt.Sprintf("%f", v))
+	}
+	sb.WriteString("))")
+	//fmt.Println(sb.String())
+	return sb.String()
 }
 
 func generateTasksTableHeader(exc *excelGenerator, project Project) {
