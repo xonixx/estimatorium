@@ -14,6 +14,9 @@ type excelGenerator struct {
 func (exc *excelGenerator) next() {
 	exc.colZ++
 }
+func (exc *excelGenerator) prev() {
+	exc.colZ--
+}
 func (exc *excelGenerator) cr() {
 	exc.rowZ++
 	exc.colZ = 0
@@ -53,6 +56,8 @@ func generateTasksTable(exc *excelGenerator, project Project) {
 }
 
 func generateTasksTableHeader(exc *excelGenerator, project Project) {
+	cell0 := exc.cellName()
+
 	exc.setVal("Feature")
 	exc.next()
 	exc.setVal("Story")
@@ -67,5 +72,10 @@ func generateTasksTableHeader(exc *excelGenerator, project Project) {
 		exc.setVal(r.Title)
 		exc.next()
 	}
+	cell1 := exc.cellName()
+	style, _ := exc.f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{Bold: true},
+	})
+	exc.f.SetCellStyle(exc.sheet, cell0, cell1, style)
 	exc.cr()
 }
