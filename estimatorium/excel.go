@@ -29,8 +29,8 @@ func (exc *excelGenerator) setVal(val interface{}) {
 	}
 }
 
-func (exc *excelGenerator) cellName(abs ...bool) string {
-	name, err := excelize.CoordinatesToCellName(exc.colZ+1, exc.rowZ+1, abs...)
+func (exc *excelGenerator) cellName( /*abs ...bool*/ ) string {
+	name, err := excelize.CoordinatesToCellName(exc.colZ+1, exc.rowZ+1 /*, abs...*/)
 	if err != nil {
 		panic(err)
 	}
@@ -58,6 +58,9 @@ func generateTasksTable(exc *excelGenerator, project Project) {
 		exc.setVal(t.Category)
 		exc.next()
 		exc.setVal(t.Title)
+		c1 := exc.cellName()
+		exc.next()
+		exc.f.MergeCell(exc.sheet, c1, exc.cellName())
 		exc.next()
 		v := map[string]string{}
 		for _, r := range project.Team {
@@ -106,6 +109,9 @@ func generateTasksTableHeader(exc *excelGenerator, project Project) {
 	exc.setVal("Feature")
 	exc.next()
 	exc.setVal("Story")
+	c1 := exc.cellName()
+	exc.next()
+	exc.f.MergeCell(exc.sheet, c1, exc.cellName())
 	exc.next()
 	for _, r := range project.Team {
 		exc.setVal(r.Title)
