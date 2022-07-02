@@ -28,6 +28,19 @@ func (exc *excelGenerator) setVal(val interface{}) {
 		panic(err)
 	}
 }
+func checkErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (exc *excelGenerator) mergeNext(mergeCnt int) {
+	cell0 := exc.cellName()
+	for i := 0; i < mergeCnt; i++ {
+		exc.next()
+	}
+	checkErr(exc.f.MergeCell(exc.sheet, cell0, exc.cellName()))
+}
 
 func (exc *excelGenerator) cellName( /*abs ...bool*/ ) string {
 	name, err := excelize.CoordinatesToCellName(exc.colZ+1, exc.rowZ+1 /*, abs...*/)
@@ -68,10 +81,7 @@ func generateTasksTable(exc *excelGenerator, project Project) {
 			currCat = t.Category
 		} else if currCat != t.Category {
 			fmt.Printf("merging: %s, %s\n", startCatCell, endCatCell)
-			err := exc.f.MergeCell(exc.sheet, startCatCell, endCatCell)
-			if err != nil {
-				panic(err)
-			}
+			checkErr(exc.f.MergeCell(exc.sheet, startCatCell, endCatCell))
 			currCat = t.Category
 			startCatCell = exc.cellName()
 			endCatCell = exc.cellName()
@@ -82,9 +92,7 @@ func generateTasksTable(exc *excelGenerator, project Project) {
 		exc.next()
 
 		exc.setVal(t.Title)
-		c1 := exc.cellName()
-		exc.next()
-		exc.f.MergeCell(exc.sheet, c1, exc.cellName())
+		exc.mergeNext(1)
 		exc.next()
 		v := map[string]string{}
 		for _, r := range project.Team {
@@ -107,10 +115,7 @@ func generateTasksTable(exc *excelGenerator, project Project) {
 		exc.cr()
 	}
 	fmt.Printf("merging: %s, %s\n", startCatCell, endCatCell)
-	err := exc.f.MergeCell(exc.sheet, startCatCell, endCatCell)
-	if err != nil {
-		panic(err)
-	}
+	checkErr(exc.f.MergeCell(exc.sheet, startCatCell, endCatCell))
 }
 
 func risksFormula(risks map[string]float32, valCell string, risksCell string) string {
@@ -138,9 +143,7 @@ func generateTasksTableHeader(exc *excelGenerator, project Project) {
 	exc.setVal("Feature")
 	exc.next()
 	exc.setVal("Story")
-	c1 := exc.cellName()
-	exc.next()
-	exc.f.MergeCell(exc.sheet, c1, exc.cellName())
+	exc.mergeNext(1)
 	exc.next()
 	for _, r := range project.Team {
 		exc.setVal(r.Title)
