@@ -138,29 +138,44 @@ func risksFormula(risks map[string]float32, valCell string, risksCell string) st
 }
 
 func generateTasksTableHeader(exc *excelGenerator, project Project) {
-	cell0 := exc.cellName()
-
-	exc.setVal("Feature")
-	exc.next()
-	exc.setVal("Story")
-	exc.mergeNext(1)
-	exc.next()
-	for _, r := range project.Team {
-		exc.setVal(r.Title)
-		exc.next()
+	cols := []headerCell{
+		{title: "Feature"},
+		{title: "Story", mergedCells: 1},
 	}
-	exc.setVal("Risks")
-	exc.next()
+
 	for _, r := range project.Team {
-		exc.setVal(r.Title)
+		cols = append(cols, headerCell{title: r.Title})
+	}
+
+	cols = append(cols, headerCell{title: "Risks"})
+
+	for _, r := range project.Team {
+		cols = append(cols, headerCell{title: r.Title})
+	}
+
+	exc.generateHeader("#091e42", "#ffffff", cols)
+}
+
+type headerCell struct {
+	mergedCells int
+	title       string
+}
+
+func (exc *excelGenerator) generateHeader(fillColor, color string, columns []headerCell) {
+	cell0 := exc.cellName()
+	for _, col := range columns {
+		exc.setVal(col.title)
+		if col.mergedCells > 0 {
+			exc.mergeNext(col.mergedCells)
+		}
 		exc.next()
 	}
 	exc.prev()
 	cell1 := exc.cellName()
 	style, _ := exc.f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{Bold: true, Color: "#ffffff"},
-		Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#091e42"}},
+		Font: &excelize.Font{Bold: true, Color: color},
+		Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{fillColor}},
 	})
-	exc.f.SetCellStyle(exc.sheet, cell0, cell1, style)
+	checkErr(exc.f.SetCellStyle(exc.sheet, cell0, cell1, style))
 	exc.cr()
 }
