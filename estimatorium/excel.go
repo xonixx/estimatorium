@@ -6,17 +6,17 @@ import (
 )
 
 type excelGenerator struct {
-	y, x  int    // current pos 0-based
-	sheet string // current sheet
-	f     *excelize.File
+	colZ, rowZ int    // current pos 0-based
+	sheet      string // current sheet
+	f          *excelize.File
 }
 
 func (exc *excelGenerator) next() {
-	exc.x++
+	exc.colZ++
 }
 func (exc *excelGenerator) cr() {
-	exc.y++
-	exc.x = 0
+	exc.rowZ++
+	exc.colZ = 0
 }
 func (exc *excelGenerator) setVal(val interface{}) {
 	err := exc.f.SetCellValue(exc.sheet, exc.cellName(), val)
@@ -26,7 +26,7 @@ func (exc *excelGenerator) setVal(val interface{}) {
 }
 
 func (exc *excelGenerator) cellName(abs ...bool) string {
-	name, err := excelize.CoordinatesToCellName(exc.y+1, exc.x+1, abs...)
+	name, err := excelize.CoordinatesToCellName(exc.colZ+1, exc.rowZ+1, abs...)
 	if err != nil {
 		panic(err)
 	}
@@ -39,10 +39,33 @@ func newExcelGenerator() *excelGenerator {
 
 func GenerateExcel(project Project, fileName string) {
 	exc := newExcelGenerator()
-	exc.cr()
-	exc.next()
-	exc.setVal(100)
+	generateTasksTable(exc, project)
+	//exc.cr()
+	//exc.next()
+	//exc.setVal(100)
 	if err := exc.f.SaveAs(fileName); err != nil {
 		fmt.Println(err)
 	}
+}
+
+func generateTasksTable(exc *excelGenerator, project Project) {
+	generateTasksTableHeader(exc, project)
+}
+
+func generateTasksTableHeader(exc *excelGenerator, project Project) {
+	exc.setVal("Feature")
+	exc.next()
+	exc.setVal("Story")
+	exc.next()
+	for _, r := range project.Team {
+		exc.setVal(r.Title)
+		exc.next()
+	}
+	exc.setVal("Risks")
+	exc.next()
+	for _, r := range project.Team {
+		exc.setVal(r.Title)
+		exc.next()
+	}
+	exc.cr()
 }

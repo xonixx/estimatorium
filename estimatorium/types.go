@@ -5,7 +5,7 @@ package estimatorium
 type Project struct {
 	TimeUnit TimeUnit
 	Currency Currency
-	Team     map[string]Resource
+	Team     []Resource
 	Risks    map[string]float32
 	Tasks    []Task
 }
@@ -41,6 +41,7 @@ func (c Currency) String() string {
 }
 
 type Resource struct {
+	Id      string
 	Title   string
 	Rate    float64
 	Count   uint8

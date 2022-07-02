@@ -10,12 +10,12 @@ func main() {
 		TimeUnit: estimatorium.Day,
 		Currency: estimatorium.Usd,
 		Risks:    estimatorium.StandardRisks(),
-		Team: map[string]estimatorium.Resource{
-			"fe": {
-				Title: "Front dev", Rate: 40, Count: 1,
+		Team: []estimatorium.Resource{
+			{
+				Id: "fe", Title: "Front dev", Rate: 40, Count: 1,
 			},
-			"be": {
-				Title: "Back dev", Rate: 50, Count: 2,
+			{
+				Id: "be", Title: "Back dev", Rate: 50, Count: 2,
 			},
 		},
 		Tasks: []estimatorium.Task{
