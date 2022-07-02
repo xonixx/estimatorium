@@ -1,5 +1,7 @@
 package estimatorium
 
+// TODO validate Project model: 1. correct resources in tasks 2. correct risks etc.
+
 type Project struct {
 	TimeUnit TimeUnit
 	Currency Currency
