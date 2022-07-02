@@ -72,9 +72,11 @@ func generateTasksTableHeader(exc *excelGenerator, project Project) {
 		exc.setVal(r.Title)
 		exc.next()
 	}
+	exc.prev()
 	cell1 := exc.cellName()
 	style, _ := exc.f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{Bold: true},
+		Font: &excelize.Font{Bold: true, Color: "#ffffff"},
+		Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#091e42"}},
 	})
 	exc.f.SetCellStyle(exc.sheet, cell0, cell1, style)
 	exc.cr()
