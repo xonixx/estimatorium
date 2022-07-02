@@ -24,7 +24,7 @@ func (exc *excelGenerator) cr() {
 	exc.colZ = 0
 }
 func (exc *excelGenerator) setVal(val interface{}) {
-	err := exc.f.SetCellValue(exc.sheet, exc.cellName(), val)
+	err := exc.f.SetCellValue(exc.sheet, exc.currentCell(), val)
 	if err != nil {
 		panic(err)
 	}
@@ -34,8 +34,8 @@ func (exc *excelGenerator) setValAndNext(val interface{}) {
 	exc.next()
 }
 func (exc *excelGenerator) setFormulaAndNext(formula string) {
-	checkErr(exc.f.SetCellFormula(exc.sheet, exc.cellName(), formula))
-	//fmt.Println(exc.f.GetCellFormula(exc.sheet, exc.cellName()))
+	checkErr(exc.f.SetCellFormula(exc.sheet, exc.currentCell(), formula))
+	//fmt.Println(exc.f.GetCellFormula(exc.sheet, exc.currentCell()))
 	exc.next()
 }
 
@@ -46,14 +46,14 @@ func checkErr(err error) {
 }
 
 func (exc *excelGenerator) mergeNext(mergeCnt int) {
-	cell0 := exc.cellName()
+	cell0 := exc.currentCell()
 	for i := 0; i < mergeCnt; i++ {
 		exc.next()
 	}
-	checkErr(exc.f.MergeCell(exc.sheet, cell0, exc.cellName()))
+	checkErr(exc.f.MergeCell(exc.sheet, cell0, exc.currentCell()))
 }
 
-func (exc *excelGenerator) cellName( /*abs ...bool*/ ) string {
+func (exc *excelGenerator) currentCell( /*abs ...bool*/ ) string {
 	name, err := excelize.CoordinatesToCellName(exc.colZ+1, exc.rowZ+1 /*, abs...*/)
 	if err != nil {
 		panic(err)
@@ -99,17 +99,17 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 		exc.setVal(t.Category)
 
 		if i == 0 {
-			startCatCell = exc.cellName()
-			endCatCell = exc.cellName()
+			startCatCell = exc.currentCell()
+			endCatCell = exc.currentCell()
 			currCat = t.Category
 		} else if currCat != t.Category {
 			fmt.Printf("merging: %s, %s\n", startCatCell, endCatCell)
 			checkErr(exc.f.MergeCell(exc.sheet, startCatCell, endCatCell))
 			currCat = t.Category
-			startCatCell = exc.cellName()
-			endCatCell = exc.cellName()
+			startCatCell = exc.currentCell()
+			endCatCell = exc.currentCell()
 		} else {
-			endCatCell = exc.cellName()
+			endCatCell = exc.currentCell()
 		}
 
 		exc.next()
@@ -120,24 +120,24 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 		v := map[string]string{}
 		for _, r := range project.Team {
 			if i == 0 {
-				res.cellRanges[r.Id] = &cellRange{hCell: exc.cellName()}
+				res.cellRanges[r.Id] = &cellRange{hCell: exc.currentCell()}
 			} else if i == len(project.Tasks)-1 {
-				res.cellRanges[r.Id].vCell = exc.cellName()
+				res.cellRanges[r.Id].vCell = exc.currentCell()
 			}
-			v[r.Id] = exc.cellName()
+			v[r.Id] = exc.currentCell()
 			exc.setValAndNext(t.Work[r.Id])
 		}
-		riskCell := exc.cellName()
+		riskCell := exc.currentCell()
 		exc.setValAndNext(t.Risk)
 		for _, r := range project.Team {
 			if i == 0 {
-				res.cellRangesWithRisk[r.Id] = &cellRange{hCell: exc.cellName()}
+				res.cellRangesWithRisk[r.Id] = &cellRange{hCell: exc.currentCell()}
 			} else if i == len(project.Tasks)-1 {
-				res.cellRangesWithRisk[r.Id].vCell = exc.cellName()
+				res.cellRangesWithRisk[r.Id].vCell = exc.currentCell()
 			}
 			//exc.setVal(t.Work[r.Id]) // TODO
 			exc.setFormulaAndNext(risksFormula(project.Risks, v[r.Id], riskCell))
-			//fmt.Println(exc.f.GetCellFormula(exc.sheet, exc.cellName()))
+			//fmt.Println(exc.f.GetCellFormula(exc.sheet, exc.currentCell()))
 		}
 		exc.cr()
 	}
@@ -150,13 +150,16 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tasksTableInfo) {
 	generateCostsTableHeader(exc, project)
 	for _, r := range project.Team {
-		exc.setCellStyle(exc.cellName(), exc.cellName(), headerStyle(exc))
+		exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
 		exc.setValAndNext(r.Title)
 		exc.setFormulaAndNext(tasksTableInfo.cellRanges[r.Id].sumFormula())
+		effortsWithRisksCell := exc.currentCell()
 		exc.setFormulaAndNext(tasksTableInfo.cellRangesWithRisk[r.Id].sumFormula())
+		rateCell := exc.currentCell()
 		exc.setValAndNext(r.Rate) // TODO fmt $
 		exc.setValAndNext(r.Count)
-		exc.setValAndNext("TODO")
+		exc.setFormulaAndNext(fmt.Sprintf("=%d*%s*%s",
+			project.TimeUnit.ToHours(), effortsWithRisksCell, rateCell))
 		exc.cr()
 	}
 }
@@ -236,7 +239,7 @@ func headerStyle(exc *excelGenerator) int {
 	return styleId
 }
 func (exc *excelGenerator) generateHeader(styleId int, columns []headerCell) {
-	cell0 := exc.cellName()
+	cell0 := exc.currentCell()
 	for _, col := range columns {
 		exc.setVal(col.title)
 		if col.mergedCells > 0 {
@@ -245,7 +248,7 @@ func (exc *excelGenerator) generateHeader(styleId int, columns []headerCell) {
 		exc.next()
 	}
 	exc.prev()
-	cell1 := exc.cellName()
+	cell1 := exc.currentCell()
 	exc.setCellStyle(cell0, cell1, styleId)
 	exc.cr()
 }

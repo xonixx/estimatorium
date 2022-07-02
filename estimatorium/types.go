@@ -25,6 +25,14 @@ func (tu TimeUnit) String() string {
 	return timeUnit2Str[tu]
 }
 
+var timeUnit2Hrs = map[TimeUnit]int{
+	Hr: 1, Day: 8,
+}
+
+func (tu TimeUnit) ToHours() int {
+	return timeUnit2Hrs[tu]
+}
+
 type Currency uint8
 
 const (
