@@ -28,6 +28,11 @@ func (exc *excelGenerator) setVal(val interface{}) {
 		panic(err)
 	}
 }
+func (exc *excelGenerator) setValAndNext(val interface{}) {
+	exc.setVal(val)
+	exc.next()
+}
+
 func checkErr(err error) {
 	if err != nil {
 		panic(err)
@@ -48,6 +53,9 @@ func (exc *excelGenerator) cellName( /*abs ...bool*/ ) string {
 		panic(err)
 	}
 	return name
+}
+func (exc *excelGenerator) setCellStyle(hCell, vCell string, styleId int) {
+	checkErr(exc.f.SetCellStyle(exc.sheet, hCell, vCell, styleId))
 }
 
 func newExcelGenerator() *excelGenerator {
@@ -99,12 +107,10 @@ func generateTasksTable(exc *excelGenerator, project Project) {
 		v := map[string]string{}
 		for _, r := range project.Team {
 			v[r.Id] = exc.cellName()
-			exc.setVal(t.Work[r.Id])
-			exc.next()
+			exc.setValAndNext(t.Work[r.Id])
 		}
 		riskCell := exc.cellName()
-		exc.setVal(t.Risk)
-		exc.next()
+		exc.setValAndNext(t.Risk)
 		for _, r := range project.Team {
 			//exc.setVal(t.Work[r.Id]) // TODO
 			err := exc.f.SetCellFormula(exc.sheet, exc.cellName(), risksFormula(project.Risks, v[r.Id], riskCell))
@@ -122,7 +128,16 @@ func generateTasksTable(exc *excelGenerator, project Project) {
 
 func generateCostsTable(exc *excelGenerator, project Project) {
 	generateCostsTableHeader(exc, project)
-
+	for _, r := range project.Team {
+		exc.setCellStyle(exc.cellName(), exc.cellName(), headerStyle(exc))
+		exc.setValAndNext(r.Title)
+		exc.setValAndNext("TODO")
+		exc.setValAndNext("TODO")
+		exc.setValAndNext(r.Rate) // TODO fmt $
+		exc.setValAndNext(r.Count)
+		exc.setValAndNext("TODO")
+		exc.cr()
+	}
 }
 
 func generateCostsTableHeader(exc *excelGenerator, project Project) {
@@ -180,9 +195,18 @@ type headerCell struct {
 }
 
 func generateHeader(exc *excelGenerator, columns []headerCell) {
-	exc.generateHeader("#091e42", "#ffffff", columns)
+	exc.generateHeader(headerStyle(exc), columns)
 }
-func (exc *excelGenerator) generateHeader(fillColor, color string, columns []headerCell) {
+func headerStyle(exc *excelGenerator) int {
+	styleId, err := exc.f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Color: "#ffffff"},
+		Alignment: &excelize.Alignment{Horizontal: "center"},
+		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#091e42"}},
+	})
+	checkErr(err)
+	return styleId
+}
+func (exc *excelGenerator) generateHeader(styleId int, columns []headerCell) {
 	cell0 := exc.cellName()
 	for _, col := range columns {
 		exc.setVal(col.title)
@@ -193,10 +217,6 @@ func (exc *excelGenerator) generateHeader(fillColor, color string, columns []hea
 	}
 	exc.prev()
 	cell1 := exc.cellName()
-	style, _ := exc.f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{Bold: true, Color: color},
-		Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{fillColor}},
-	})
-	checkErr(exc.f.SetCellStyle(exc.sheet, cell0, cell1, style))
+	exc.setCellStyle(cell0, cell1, styleId)
 	exc.cr()
 }
