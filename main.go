@@ -1,13 +1,12 @@
 package main
 
 import (
+	"estimatorium/estimatorium"
 	"fmt"
-
-	"github.com/xuri/excelize/v2"
 )
 
 func main() {
-	f := excelize.NewFile()
+	/*f := excelize.NewFile()
 	// Create a new sheet.
 	index := f.NewSheet("Sheet2")
 	// Set value of a cell.
@@ -18,5 +17,11 @@ func main() {
 	// Save spreadsheet by the given path.
 	if err := f.SaveAs("Book1.xlsx"); err != nil {
 		fmt.Println(err)
+	}*/
+
+	project := estimatorium.Project{
+		TimeUnit: estimatorium.Day,
+		Currency: estimatorium.Usd,
 	}
+	fmt.Println(project)
 }
