@@ -57,6 +57,8 @@ func newExcelGenerator() *excelGenerator {
 func GenerateExcel(project Project, fileName string) {
 	exc := newExcelGenerator()
 	generateTasksTable(exc, project)
+	exc.cr()
+	generateCostsTable(exc, project)
 	//exc.cr()
 	//exc.next()
 	//exc.setVal(100)
@@ -118,6 +120,22 @@ func generateTasksTable(exc *excelGenerator, project Project) {
 	checkErr(exc.f.MergeCell(exc.sheet, startCatCell, endCatCell))
 }
 
+func generateCostsTable(exc *excelGenerator, project Project) {
+	generateCostsTableHeader(exc, project)
+
+}
+
+func generateCostsTableHeader(exc *excelGenerator, project Project) {
+	generateHeader(exc, []headerCell{
+		{title: ""},
+		{title: fmt.Sprintf("Efforts (%v)", project.TimeUnit)},
+		{title: "With Risk"},
+		{title: "Rate"},
+		{title: "Team"},
+		{title: "Total"},
+	})
+}
+
 func risksFormula(risks map[string]float32, valCell string, risksCell string) string {
 	// =ROUNDUP(D6*SWITCH($F6,"",1, "Low", 1.1, "Medium", 1.5, "High", 2, "Extreme", 5))
 	var sb strings.Builder
@@ -153,7 +171,7 @@ func generateTasksTableHeader(exc *excelGenerator, project Project) {
 		cols = append(cols, headerCell{title: r.Title})
 	}
 
-	exc.generateHeader("#091e42", "#ffffff", cols)
+	generateHeader(exc, cols)
 }
 
 type headerCell struct {
@@ -161,6 +179,9 @@ type headerCell struct {
 	title       string
 }
 
+func generateHeader(exc *excelGenerator, columns []headerCell) {
+	exc.generateHeader("#091e42", "#ffffff", columns)
+}
 func (exc *excelGenerator) generateHeader(fillColor, color string, columns []headerCell) {
 	cell0 := exc.cellName()
 	for _, col := range columns {
