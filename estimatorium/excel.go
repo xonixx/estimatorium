@@ -149,19 +149,46 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 
 func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tasksTableInfo) {
 	generateCostsTableHeader(exc, project)
-	for _, r := range project.Team {
+	effortsRange := cellRange{}
+	effortsWithRiskRange := cellRange{}
+	totalsRange := cellRange{}
+	for i, r := range project.Team {
 		exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
 		exc.setValAndNext(r.Title)
+		isFirst := i == 0
+		isLast := i == len(project.Team)-1
+		if isFirst {
+			effortsRange.hCell = exc.currentCell()
+		} else if isLast {
+			effortsRange.vCell = exc.currentCell()
+		}
 		exc.setFormulaAndNext(tasksTableInfo.cellRanges[r.Id].sumFormula())
+		if isFirst {
+			effortsWithRiskRange.hCell = exc.currentCell()
+		} else if isLast {
+			effortsWithRiskRange.vCell = exc.currentCell()
+		}
 		effortsWithRisksCell := exc.currentCell()
 		exc.setFormulaAndNext(tasksTableInfo.cellRangesWithRisk[r.Id].sumFormula())
 		rateCell := exc.currentCell()
 		exc.setValAndNext(r.Rate) // TODO fmt $
 		exc.setValAndNext(r.Count)
+		if isFirst {
+			totalsRange.hCell = exc.currentCell()
+		} else if isLast {
+			totalsRange.vCell = exc.currentCell()
+		}
 		exc.setFormulaAndNext(fmt.Sprintf("=%d*%s*%s",
 			project.TimeUnit.ToHours(), effortsWithRisksCell, rateCell))
 		exc.cr()
 	}
+	exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
+	exc.setValAndNext("Sum")
+	exc.setFormulaAndNext(effortsRange.sumFormula())
+	exc.setFormulaAndNext(effortsWithRiskRange.sumFormula())
+	exc.setValAndNext("")
+	exc.setValAndNext("")
+	exc.setFormulaAndNext(totalsRange.sumFormula())
 }
 
 func generateCostsTableHeader(exc *excelGenerator, project Project) {
