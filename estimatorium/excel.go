@@ -24,10 +24,7 @@ func (exc *excelGenerator) cr() {
 	exc.colZ = 0
 }
 func (exc *excelGenerator) setVal(val interface{}) {
-	err := exc.f.SetCellValue(exc.sheet, exc.currentCell(), val)
-	if err != nil {
-		panic(err)
-	}
+	checkErr(exc.f.SetCellValue(exc.sheet, exc.currentCell(), val))
 }
 func (exc *excelGenerator) setValAndNext(val interface{}) {
 	exc.setVal(val)
@@ -55,9 +52,7 @@ func (exc *excelGenerator) mergeNext(mergeCnt int) {
 
 func (exc *excelGenerator) currentCell( /*abs ...bool*/ ) string {
 	name, err := excelize.CoordinatesToCellName(exc.colZ+1, exc.rowZ+1 /*, abs...*/)
-	if err != nil {
-		panic(err)
-	}
+	checkErr(err)
 	return name
 }
 func (exc *excelGenerator) setCellStyle(hCell, vCell string, styleId int) {
@@ -75,12 +70,7 @@ func GenerateExcel(project Project, fileName string) {
 	costsTableInfo := generateCostsTable(exc, project, taskTableInfo)
 	exc.cr()
 	generateDurationsTable(exc, project, costsTableInfo)
-	//exc.cr()
-	//exc.next()
-	//exc.setVal(100)
-	if err := exc.f.SaveAs(fileName); err != nil {
-		fmt.Println(err)
-	}
+	checkErr(exc.f.SaveAs(fileName))
 }
 
 type tasksTableInfo struct {
@@ -120,7 +110,8 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 		exc.mergeNext(1)
 		exc.next()
 		v := map[string]string{}
-		for _, r := range project.Team {
+		teamExcludingDerived := project.TeamExcludingDerived()
+		for _, r := range teamExcludingDerived {
 			if i == 0 {
 				res.cellRanges[r.Id] = &cellRange{hCell: exc.currentCell()}
 			} else if i == len(project.Tasks)-1 {
@@ -131,7 +122,7 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 		}
 		riskCell := exc.currentCell()
 		exc.setValAndNext(t.Risk)
-		for _, r := range project.Team {
+		for _, r := range teamExcludingDerived {
 			if i == 0 {
 				res.cellRangesWithRisk[r.Id] = &cellRange{hCell: exc.currentCell()}
 			} else if i == len(project.Tasks)-1 {
@@ -174,7 +165,13 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 			effortsRange.vCell = exc.currentCell()
 		}
 		res.costsData[r.Id] = &resourceCostsCells{effortsCell: exc.currentCell()}
-		exc.setFormulaAndNext(tasksTableInfo.cellRanges[r.Id].sumFormula())
+		var effortsFormula string
+		if r.Formula == "" {
+			effortsFormula = tasksTableInfo.cellRanges[r.Id].sumFormula()
+		} else {
+			effortsFormula = "=0" // TODO
+		}
+		exc.setFormulaAndNext(effortsFormula)
 		if isFirst {
 			effortsWithRiskRange.hCell = exc.currentCell()
 		} else if isLast {
@@ -182,7 +179,13 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		}
 		effortsWithRisksCell := exc.currentCell()
 		res.costsData[r.Id].effortsWithRisksCell = effortsWithRisksCell
-		exc.setFormulaAndNext(tasksTableInfo.cellRangesWithRisk[r.Id].sumFormula())
+		var effortsWithRisksFormula string
+		if r.Formula == "" {
+			effortsWithRisksFormula = tasksTableInfo.cellRangesWithRisk[r.Id].sumFormula()
+		} else {
+			effortsWithRisksFormula = "=0" // TODO
+		}
+		exc.setFormulaAndNext(effortsWithRisksFormula)
 		rateCell := exc.currentCell()
 		exc.setValAndNext(r.Rate) // TODO fmt $
 		res.costsData[r.Id].countCell = exc.currentCell()
@@ -219,7 +222,7 @@ func generateCostsTableHeader(exc *excelGenerator, project Project) {
 }
 
 func generateDurationsTable(exc *excelGenerator, project Project, costsTableInfo costsTableInfo) {
-	generateDurationsTableHeader(exc, project)
+	generateDurationsTableHeader(exc)
 
 	exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
 	exc.setValAndNext("Duration")
@@ -241,7 +244,7 @@ func generateDurationsTable(exc *excelGenerator, project Project, costsTableInfo
 func durationFormula(project Project, costsTableInfo costsTableInfo, f func(*resourceCostsCells) string) string {
 	var sb strings.Builder
 	sb.WriteString("=ROUND(MAX(")
-	for i, r := range project.Team {
+	for i, r := range project.TeamExcludingDerived() {
 		cells := costsTableInfo.costsData[r.Id]
 		sb.WriteString(f(cells))
 		sb.WriteString("/")
@@ -256,7 +259,7 @@ func durationFormula(project Project, costsTableInfo costsTableInfo, f func(*res
 	return sb.String()
 }
 
-func generateDurationsTableHeader(exc *excelGenerator, project Project) {
+func generateDurationsTableHeader(exc *excelGenerator) {
 	generateHeader(exc, []headerCell{
 		{title: ""},
 		{title: "Timeframe draft", mergedCells: 1},
@@ -288,13 +291,15 @@ func generateTasksTableHeader(exc *excelGenerator, project Project) {
 		{title: "Story", mergedCells: 1},
 	}
 
-	for _, r := range project.Team {
+	teamExcludingDerived := project.TeamExcludingDerived()
+
+	for _, r := range teamExcludingDerived {
 		cols = append(cols, headerCell{title: r.Title})
 	}
 
 	cols = append(cols, headerCell{title: "Risks"})
 
-	for _, r := range project.Team {
+	for _, r := range teamExcludingDerived {
 		cols = append(cols, headerCell{title: r.Title})
 	}
 
@@ -305,8 +310,11 @@ type cellRange struct {
 	hCell, vCell string
 }
 
+func (cellRange cellRange) String() string {
+	return cellRange.hCell + ":" + cellRange.vCell
+}
 func (cellRange cellRange) sumFormula() string {
-	return fmt.Sprintf("=SUM(%s:%s)", cellRange.hCell, cellRange.vCell)
+	return fmt.Sprintf("=SUM(%s)", cellRange)
 }
 
 type headerCell struct {

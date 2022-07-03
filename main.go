@@ -13,6 +13,7 @@ func main() {
 		Team: []estimatorium.Resource{
 			{Id: "fe", Title: "Front dev", Rate: 40, Count: 1},
 			{Id: "be", Title: "Back dev", Rate: 50, Count: 2},
+			{Id: "qa", Title: "QA", Rate: 35, Formula: "(fe + be)*0.3"},
 		},
 		Tasks: []estimatorium.Task{
 			{Category: "Initial", Title: "Task 1", Risk: "low", Work: map[string]float32{"be": 2, "fe": 5}},

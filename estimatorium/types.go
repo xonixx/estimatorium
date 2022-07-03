@@ -10,6 +10,16 @@ type Project struct {
 	Tasks    []Task
 }
 
+func (p Project) TeamExcludingDerived() []Resource {
+	res := []Resource{}
+	for _, r := range p.Team {
+		if r.Formula == "" {
+			res = append(res, r)
+		}
+	}
+	return res
+}
+
 type TimeUnit uint8
 
 const (
