@@ -73,6 +73,8 @@ func GenerateExcel(project Project, fileName string) {
 	taskTableInfo := generateTasksTable(exc, project)
 	exc.cr()
 	generateCostsTable(exc, project, taskTableInfo)
+	exc.cr()
+	generateDurationsTable(exc, project)
 	//exc.cr()
 	//exc.next()
 	//exc.setVal(100)
@@ -189,6 +191,7 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 	exc.setValAndNext("")
 	exc.setValAndNext("")
 	exc.setFormulaAndNext(totalsRange.sumFormula())
+	exc.cr()
 }
 
 func generateCostsTableHeader(exc *excelGenerator, project Project) {
@@ -199,6 +202,28 @@ func generateCostsTableHeader(exc *excelGenerator, project Project) {
 		{title: "Rate"},
 		{title: "Team"},
 		{title: "Total"},
+	})
+}
+
+func generateDurationsTable(exc *excelGenerator, project Project) {
+	generateDurationsTableHeader(exc, project)
+
+	exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
+	exc.setValAndNext("Duration")
+	exc.setValAndNext("TODO")
+	exc.setValAndNext("Months")
+	exc.cr()
+	exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
+	exc.setValAndNext("With risks")
+	exc.setValAndNext("TODO")
+	exc.setValAndNext("Months")
+	exc.cr()
+}
+
+func generateDurationsTableHeader(exc *excelGenerator, project Project) {
+	generateHeader(exc, []headerCell{
+		{title: ""},
+		{title: "Timeframe draft", mergedCells: 1},
 	})
 }
 
