@@ -224,11 +224,26 @@ func generateDurationsTable(exc *excelGenerator, project Project, costsTableInfo
 	exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
 	exc.setValAndNext("Duration")
 
+	exc.setFormulaAndNext(durationFormula(project, costsTableInfo, func(cells *resourceCostsCells) string {
+		return cells.effortsCell
+	}))
+	exc.setValAndNext("Months")
+	exc.cr()
+	exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
+	exc.setValAndNext("With risks")
+	exc.setFormulaAndNext(durationFormula(project, costsTableInfo, func(cells *resourceCostsCells) string {
+		return cells.effortsWithRisksCell
+	}))
+	exc.setValAndNext("Months")
+	exc.cr()
+}
+
+func durationFormula(project Project, costsTableInfo costsTableInfo, f func(*resourceCostsCells) string) string {
 	var sb strings.Builder
 	sb.WriteString("=MAX(")
 	for i, r := range project.Team {
 		cells := costsTableInfo.costsData[r.Id]
-		sb.WriteString(cells.effortsCell)
+		sb.WriteString(f(cells))
 		sb.WriteString("/")
 		sb.WriteString(cells.countCell)
 		if i < len(project.Team)-1 {
@@ -236,15 +251,7 @@ func generateDurationsTable(exc *excelGenerator, project Project, costsTableInfo
 		}
 	}
 	sb.WriteString(")")
-
-	exc.setFormulaAndNext(sb.String())
-	exc.setValAndNext("Months")
-	exc.cr()
-	exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
-	exc.setValAndNext("With risks")
-	exc.setValAndNext("TODO")
-	exc.setValAndNext("Months")
-	exc.cr()
+	return sb.String()
 }
 
 func generateDurationsTableHeader(exc *excelGenerator, project Project) {
