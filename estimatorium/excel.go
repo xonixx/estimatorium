@@ -240,7 +240,7 @@ func generateDurationsTable(exc *excelGenerator, project Project, costsTableInfo
 
 func durationFormula(project Project, costsTableInfo costsTableInfo, f func(*resourceCostsCells) string) string {
 	var sb strings.Builder
-	sb.WriteString("=MAX(")
+	sb.WriteString("=ROUND(MAX(")
 	for i, r := range project.Team {
 		cells := costsTableInfo.costsData[r.Id]
 		sb.WriteString(f(cells))
@@ -250,7 +250,9 @@ func durationFormula(project Project, costsTableInfo costsTableInfo, f func(*res
 			sb.WriteString(",")
 		}
 	}
-	sb.WriteString(")")
+	sb.WriteString(")*")
+	sb.WriteString(fmt.Sprintf("%d", project.TimeUnit.ToHours()))
+	sb.WriteString("/8/21,1)")
 	return sb.String()
 }
 
