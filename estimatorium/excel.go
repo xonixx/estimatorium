@@ -169,7 +169,11 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		if r.Formula == "" {
 			effortsFormula = tasksTableInfo.cellRanges[r.Id].sumFormula()
 		} else {
-			effortsFormula = "=0" // TODO
+			formula := r.Formula
+			for _, r1 := range project.TeamExcludingDerived() {
+				formula = strings.Replace(formula, r1.Id, "SUM("+tasksTableInfo.cellRanges[r1.Id].String()+")", -1)
+			}
+			effortsFormula = "=" + formula
 		}
 		exc.setFormulaAndNext(effortsFormula)
 		if isFirst {
@@ -183,7 +187,11 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		if r.Formula == "" {
 			effortsWithRisksFormula = tasksTableInfo.cellRangesWithRisk[r.Id].sumFormula()
 		} else {
-			effortsWithRisksFormula = "=0" // TODO
+			formula := r.Formula
+			for _, r1 := range project.TeamExcludingDerived() {
+				formula = strings.Replace(formula, r1.Id, "SUM("+tasksTableInfo.cellRangesWithRisk[r1.Id].String()+")", -1)
+			}
+			effortsWithRisksFormula = "=" + formula
 		}
 		exc.setFormulaAndNext(effortsWithRisksFormula)
 		rateCell := exc.currentCell()
