@@ -50,8 +50,11 @@ func (exc *excelGenerator) mergeNext(mergeCnt int) {
 	checkErr(exc.f.MergeCell(exc.sheet, cell0, exc.currentCell()))
 }
 
-func (exc *excelGenerator) currentCell( /*abs ...bool*/ ) string {
-	name, err := excelize.CoordinatesToCellName(exc.colZ+1, exc.rowZ+1 /*, abs...*/)
+func (exc *excelGenerator) currentCell() string {
+	return exc.currentCellAbs(false)
+}
+func (exc *excelGenerator) currentCellAbs(abs bool) string {
+	name, err := excelize.CoordinatesToCellName(exc.colZ+1, exc.rowZ+1, abs)
 	checkErr(err)
 	return name
 }
@@ -67,11 +70,12 @@ func GenerateExcel(project Project, fileName string) {
 	exc := newExcelGenerator()
 	taskTableInfo := generateTasksTable(exc, project)
 	exc.cr()
+	parametersTableInfo := parametersTableInfo{}
 	if project.AcceptancePercent > 0 {
-		generateParametersTable(exc, project.AcceptancePercent)
+		parametersTableInfo = generateParametersTable(exc, project.AcceptancePercent)
 		exc.cr()
 	}
-	costsTableInfo := generateCostsTable(exc, project, taskTableInfo)
+	costsTableInfo := generateCostsTable(exc, project, taskTableInfo, parametersTableInfo)
 	exc.cr()
 	generateDurationsTable(exc, project, costsTableInfo)
 	checkErr(exc.f.SaveAs(fileName))
@@ -144,10 +148,17 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 	return res
 }
 
-func generateParametersTable(exc *excelGenerator, acceptancePercent float32) {
+type parametersTableInfo struct {
+	acceptancePercentCell string
+}
+
+func generateParametersTable(exc *excelGenerator, acceptancePercent float32) parametersTableInfo {
+	res := parametersTableInfo{}
 	exc.setValAndNext("Cleanup & acceptance")
+	res.acceptancePercentCell = exc.currentCellAbs(true)
 	exc.setValAndNext(fmt.Sprintf("%.1f%%", acceptancePercent))
 	exc.cr()
+	return res
 }
 
 type resourceCostsCells struct {
@@ -158,7 +169,7 @@ type costsTableInfo struct {
 	costsData map[string]*resourceCostsCells
 }
 
-func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tasksTableInfo) costsTableInfo {
+func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tasksTableInfo, parametersTableInfo parametersTableInfo) costsTableInfo {
 	res := costsTableInfo{costsData: map[string]*resourceCostsCells{}}
 	generateCostsTableHeader(exc, project)
 	effortsRange := cellRange{}
@@ -185,6 +196,9 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 			}
 			effortsFormula = "=" + formula
 		}
+		if project.AcceptancePercent > 0 {
+			effortsFormula += "*(1+" + parametersTableInfo.acceptancePercentCell + ")"
+		}
 		exc.setFormulaAndNext(effortsFormula)
 		if isFirst {
 			effortsWithRiskRange.hCell = exc.currentCell()
@@ -202,6 +216,9 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 				formula = strings.Replace(formula, r1.Id, "SUM("+tasksTableInfo.cellRangesWithRisk[r1.Id].String()+")", -1)
 			}
 			effortsWithRisksFormula = "=" + formula
+		}
+		if project.AcceptancePercent > 0 {
+			effortsWithRisksFormula += "*(1+" + parametersTableInfo.acceptancePercentCell + ")"
 		}
 		exc.setFormulaAndNext(effortsWithRisksFormula)
 		rateCell := exc.currentCell()
@@ -262,12 +279,13 @@ func generateDurationsTable(exc *excelGenerator, project Project, costsTableInfo
 func durationFormula(project Project, costsTableInfo costsTableInfo, f func(*resourceCostsCells) string) string {
 	var sb strings.Builder
 	sb.WriteString("=ROUND(MAX(")
-	for i, r := range project.TeamExcludingDerived() {
+	resources := project.TeamExcludingDerived()
+	for i, r := range resources {
 		cells := costsTableInfo.costsData[r.Id]
 		sb.WriteString(f(cells))
 		sb.WriteString("/")
 		sb.WriteString(cells.countCell)
-		if i < len(project.Team)-1 {
+		if i < len(resources)-1 {
 			sb.WriteString(",")
 		}
 	}
