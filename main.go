@@ -7,9 +7,10 @@ import (
 
 func main() {
 	project := estimatorium.Project{
-		TimeUnit: estimatorium.Day,
-		Currency: estimatorium.Usd,
-		Risks:    estimatorium.StandardRisks(),
+		TimeUnit:          estimatorium.Day,
+		AcceptancePercent: 10,
+		Currency:          estimatorium.Usd,
+		Risks:             estimatorium.StandardRisks(),
 		Team: []estimatorium.Resource{
 			{Id: "fe", Title: "Front dev", Rate: 40, Count: 1},
 			{Id: "be", Title: "Back dev", Rate: 50, Count: 2},

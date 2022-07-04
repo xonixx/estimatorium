@@ -3,11 +3,12 @@ package estimatorium
 // TODO validate Project model: 1. correct resources in tasks 2. correct risks etc.
 
 type Project struct {
-	TimeUnit TimeUnit
-	Currency Currency
-	Team     []Resource
-	Risks    map[string]float32
-	Tasks    []Task
+	TimeUnit          TimeUnit
+	Currency          Currency
+	AcceptancePercent float32 // "Cleanup & acceptance" parameter
+	Team              []Resource
+	Risks             map[string]float32
+	Tasks             []Task
 }
 
 func (p Project) TeamExcludingDerived() []Resource {

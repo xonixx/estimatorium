@@ -67,6 +67,10 @@ func GenerateExcel(project Project, fileName string) {
 	exc := newExcelGenerator()
 	taskTableInfo := generateTasksTable(exc, project)
 	exc.cr()
+	if project.AcceptancePercent > 0 {
+		generateParametersTable(exc, project.AcceptancePercent)
+		exc.cr()
+	}
 	costsTableInfo := generateCostsTable(exc, project, taskTableInfo)
 	exc.cr()
 	generateDurationsTable(exc, project, costsTableInfo)
@@ -138,6 +142,12 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 	checkErr(exc.f.MergeCell(exc.sheet, startCatCell, endCatCell))
 
 	return res
+}
+
+func generateParametersTable(exc *excelGenerator, acceptancePercent float32) {
+	exc.setValAndNext("Cleanup & acceptance")
+	exc.setValAndNext(fmt.Sprintf("%.1f%%", acceptancePercent))
+	exc.cr()
 }
 
 type resourceCostsCells struct {
