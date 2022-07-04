@@ -202,7 +202,7 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 			for _, r1 := range project.TeamExcludingDerived() {
 				formula = strings.Replace(formula, r1.Id, "SUM("+tasksTableInfo.cellRanges[r1.Id].String()+")", -1)
 			}
-			effortsFormula = "=" + formula
+			effortsFormula = formula
 		}
 		if project.AcceptancePercent > 0 {
 			effortsFormula += "*(1+" + parametersTableInfo.acceptancePercentCell + ")"
@@ -223,7 +223,7 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 			for _, r1 := range project.TeamExcludingDerived() {
 				formula = strings.Replace(formula, r1.Id, "SUM("+tasksTableInfo.cellRangesWithRisk[r1.Id].String()+")", -1)
 			}
-			effortsWithRisksFormula = "=" + formula
+			effortsWithRisksFormula = formula
 		}
 		if project.AcceptancePercent > 0 {
 			effortsWithRisksFormula += "*(1+" + parametersTableInfo.acceptancePercentCell + ")"
@@ -238,7 +238,7 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		} else if isLast {
 			totalsRange.vCell = exc.currentCell()
 		}
-		exc.setFormulaAndNext(fmt.Sprintf("=%d*%s*%s",
+		exc.setFormulaAndNext(fmt.Sprintf("%d*%s*%s",
 			project.TimeUnit.ToHours(), effortsWithRisksCell, rateCell))
 		exc.cr()
 	}
@@ -286,7 +286,7 @@ func generateDurationsTable(exc *excelGenerator, project Project, costsTableInfo
 
 func durationFormula(project Project, costsTableInfo costsTableInfo, f func(*resourceCostsCells) string) string {
 	var sb strings.Builder
-	sb.WriteString("=ROUND(MAX(")
+	sb.WriteString("ROUND(MAX(")
 	resources := project.TeamExcludingDerived()
 	for i, r := range resources {
 		cells := costsTableInfo.costsData[r.Id]
@@ -313,7 +313,7 @@ func generateDurationsTableHeader(exc *excelGenerator) {
 func risksFormula(risks map[string]float32, valCell string, risksCell string) string {
 	// =ROUNDUP(D6*SWITCH($F6,"",1, "Low", 1.1, "Medium", 1.5, "High", 2, "Extreme", 5))
 	var sb strings.Builder
-	sb.WriteString("=ROUNDUP(")
+	sb.WriteString("ROUNDUP(")
 	sb.WriteString(valCell)
 	sb.WriteString("*_xlfn.SWITCH(")
 	sb.WriteString(risksCell)
@@ -358,7 +358,7 @@ func (cellRange cellRange) String() string {
 	return cellRange.hCell + ":" + cellRange.vCell
 }
 func (cellRange cellRange) sumFormula() string {
-	return fmt.Sprintf("=SUM(%s)", cellRange)
+	return fmt.Sprintf("SUM(%s)", cellRange)
 }
 
 type headerCell struct {
