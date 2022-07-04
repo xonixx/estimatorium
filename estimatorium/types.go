@@ -1,5 +1,7 @@
 package estimatorium
 
+import "sort"
+
 // TODO validate Project model: 1. correct resources in tasks 2. correct risks etc.
 
 type Project struct {
@@ -80,6 +82,19 @@ func StandardRisks() map[string]float32 {
 		"medium": 1.5,
 		"high":   2,
 	}
+}
+
+func RiskLabels(risks map[string]float32) []string {
+	var keys []string
+	for k := range risks {
+		keys = append(keys, k)
+	}
+	sort.SliceStable(keys, func(i, j int) bool {
+		ki := keys[i]
+		kj := keys[j]
+		return risks[ki] < risks[kj]
+	})
+	return keys
 }
 
 var standardResourceTypes = map[string]string{

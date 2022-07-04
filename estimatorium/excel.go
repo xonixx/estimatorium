@@ -95,6 +95,8 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 	endCatCell := ""
 	currCat := ""
 
+	var firstRiskCell string
+
 	for i, t := range project.Tasks {
 		exc.setVal(t.Category)
 
@@ -129,6 +131,17 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 			exc.setValAndNext(t.Work[r.Id])
 		}
 		riskCell := exc.currentCell()
+		if i == 0 {
+			firstRiskCell = riskCell
+		} else if i == len(project.Tasks)-1 {
+			dv := excelize.NewDataValidation(true)
+			dv.Sqref = firstRiskCell + ":" + exc.currentCell()
+			fmt.Println("HERE " + dv.Sqref)
+			checkErr(dv.SetDropList(RiskLabels(project.Risks)))
+			dv.ShowDropDown = true
+			//dv.Type = ""
+			checkErr(exc.f.AddDataValidation(exc.sheet, dv))
+		}
 		exc.setValAndNext(t.Risk)
 		for _, r := range teamExcludingDerived {
 			if i == 0 {
