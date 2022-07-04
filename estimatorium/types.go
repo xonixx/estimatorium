@@ -81,3 +81,16 @@ func StandardRisks() map[string]float32 {
 		"high":   2,
 	}
 }
+
+var standardResourceTypes = map[string]string{
+	"fe":    "Front dev",
+	"be":    "Back dev",
+	"mob":   "Mob dev",
+	"ios":   "iOS dev",
+	"droid": "Android dev",
+	"do":    "DevOps",
+	"pm":    "Project Manager",
+	"ba":    "Business Analyst",
+	"qa":    "QA Engineer",
+	"ds":    "UI Designer",
+}
