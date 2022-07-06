@@ -140,6 +140,10 @@ func autoFixColWidths(exc *excelGenerator) {
 	}
 
 	// hack for merged
+	if largestWidthMap[1] > 17 {
+		largestWidthMap[1] -= largestWidthMap[2]
+		largestWidthMap[1] -= 1
+	}
 	largestWidthMap[1] = (largestWidthMap[1] + largestWidthMap[2]) / 2
 	largestWidthMap[2] = largestWidthMap[1]
 
