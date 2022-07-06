@@ -73,15 +73,16 @@ func (exc *excelGenerator) currentCellAbs(abs bool) string {
 func newExcelGenerator(currency Currency) *excelGenerator {
 	file := excelize.NewFile()
 	fmtCode := "[$" + currency.Symbol() + "]#,##0"
-	currencyStyleId, err := file.NewStyle(&excelize.Style{CustomNumFmt: &fmtCode})
+	borders := []excelize.Border{
+		{Type: "left", Color: "000000", Style: 1},
+		{Type: "top", Color: "000000", Style: 1},
+		{Type: "bottom", Color: "000000", Style: 1},
+		{Type: "right", Color: "000000", Style: 1},
+	}
+	currencyStyleId, err := file.NewStyle(&excelize.Style{CustomNumFmt: &fmtCode, Border: borders})
 	checkErr(err)
 	tableStyleId, err := file.NewStyle(&excelize.Style{
-		Border: []excelize.Border{
-			{Type: "left", Color: "000000", Style: 1},
-			{Type: "top", Color: "000000", Style: 1},
-			{Type: "bottom", Color: "000000", Style: 1},
-			{Type: "right", Color: "000000", Style: 1},
-		},
+		Border: borders,
 	})
 	checkErr(err)
 	headerStyleId, err := file.NewStyle(&excelize.Style{
