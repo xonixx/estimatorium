@@ -12,6 +12,8 @@ type excelGenerator struct {
 	sheet           string // current sheet
 	f               *excelize.File
 	currencyStyleId int
+	headerStyleId   int
+	tableStyleId    int
 }
 
 func (exc *excelGenerator) next() {
@@ -28,6 +30,7 @@ func (exc *excelGenerator) setVal(val interface{}) {
 	checkErr(exc.f.SetCellValue(exc.sheet, exc.currentCell(), val))
 }
 func (exc *excelGenerator) setValAndNext(val interface{}) {
+	//exc.setCurrCellStyle(exc.tableStyleId)
 	exc.setVal(val)
 	exc.next()
 }
@@ -71,7 +74,23 @@ func newExcelGenerator(currency Currency) *excelGenerator {
 	fmtCode := "[$" + currency.Symbol() + "]#,##0"
 	currencyStyleId, err := file.NewStyle(&excelize.Style{CustomNumFmt: &fmtCode})
 	checkErr(err)
-	return &excelGenerator{f: file, sheet: "Sheet1", currencyStyleId: currencyStyleId}
+	tableStyleId, err := file.NewStyle(&excelize.Style{
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+		},
+	})
+	checkErr(err)
+	headerStyleId, err := file.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Color: "#ffffff"},
+		Alignment: &excelize.Alignment{Horizontal: "center"},
+		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#091e42"}},
+	})
+	checkErr(err)
+	return &excelGenerator{f: file, sheet: "Sheet1",
+		currencyStyleId: currencyStyleId, tableStyleId: tableStyleId, headerStyleId: headerStyleId}
 }
 
 func GenerateExcel(project Project, fileName string) {
@@ -192,7 +211,7 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 	effortsWithRiskRange := cellRange{}
 	totalsRange := cellRange{}
 	for i, r := range project.Team {
-		exc.setCurrCellStyle(headerStyle(exc))
+		exc.setCurrCellStyle(exc.headerStyleId)
 		exc.setValAndNext(r.Title)
 		isFirst := i == 0
 		isLast := i == len(project.Team)-1
@@ -252,7 +271,7 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 			project.TimeUnit.ToHours(), effortsWithRisksCell, rateCell))
 		exc.cr()
 	}
-	exc.setCurrCellStyle(headerStyle(exc))
+	exc.setCurrCellStyle(exc.headerStyleId)
 	exc.setValAndNext("Sum")
 	exc.setFormulaAndNext(effortsRange.sumFormula())
 	exc.setFormulaAndNext(effortsWithRiskRange.sumFormula())
@@ -278,7 +297,7 @@ func generateCostsTableHeader(exc *excelGenerator, project Project) {
 func generateDurationsTable(exc *excelGenerator, project Project, costsTableInfo costsTableInfo) {
 	generateDurationsTableHeader(exc)
 
-	exc.setCurrCellStyle(headerStyle(exc))
+	exc.setCurrCellStyle(exc.headerStyleId)
 	exc.setValAndNext("Duration")
 
 	exc.setFormulaAndNext(durationFormula(project, costsTableInfo, func(cells *resourceCostsCells) string {
@@ -286,7 +305,7 @@ func generateDurationsTable(exc *excelGenerator, project Project, costsTableInfo
 	}))
 	exc.setValAndNext("Months")
 	exc.cr()
-	exc.setCurrCellStyle(headerStyle(exc))
+	exc.setCurrCellStyle(exc.headerStyleId)
 	exc.setValAndNext("With risks")
 	exc.setFormulaAndNext(durationFormula(project, costsTableInfo, func(cells *resourceCostsCells) string {
 		return cells.effortsWithRisksCell
@@ -378,16 +397,7 @@ type headerCell struct {
 }
 
 func generateHeader(exc *excelGenerator, columns []headerCell) {
-	exc.generateHeader(headerStyle(exc), columns)
-}
-func headerStyle(exc *excelGenerator) int {
-	styleId, err := exc.f.NewStyle(&excelize.Style{
-		Font:      &excelize.Font{Bold: true, Color: "#ffffff"},
-		Alignment: &excelize.Alignment{Horizontal: "center"},
-		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#091e42"}},
-	})
-	checkErr(err)
-	return styleId
+	exc.generateHeader(exc.headerStyleId, columns)
 }
 func (exc *excelGenerator) generateHeader(styleId int, columns []headerCell) {
 	cell0 := exc.currentCell()
