@@ -8,12 +8,13 @@ import (
 )
 
 type excelGenerator struct {
-	colZ, rowZ      int    // current pos 0-based
-	sheet           string // current sheet
-	f               *excelize.File
-	currencyStyleId int
-	headerStyleId   int
-	borderedStyleId int
+	colZ, rowZ          int    // current pos 0-based
+	sheet               string // current sheet
+	f                   *excelize.File
+	currencyStyleId     int
+	currencyBoldStyleId int
+	headerStyleId       int
+	borderedStyleId     int
 }
 
 func (exc *excelGenerator) next() {
@@ -70,6 +71,11 @@ func (exc *excelGenerator) currentCellAbs(abs bool) string {
 	return name
 }
 
+func newStyle(file *excelize.File, style *excelize.Style) int {
+	styleId, err := file.NewStyle(style)
+	checkErr(err)
+	return styleId
+}
 func newExcelGenerator(currency Currency) *excelGenerator {
 	file := excelize.NewFile()
 	fmtCode := "[$" + currency.Symbol() + "]#,##0"
@@ -79,20 +85,15 @@ func newExcelGenerator(currency Currency) *excelGenerator {
 		{Type: "bottom", Color: "000000", Style: 1},
 		{Type: "right", Color: "000000", Style: 1},
 	}
-	currencyStyleId, err := file.NewStyle(&excelize.Style{CustomNumFmt: &fmtCode, Border: borders})
-	checkErr(err)
-	tableStyleId, err := file.NewStyle(&excelize.Style{
-		Border: borders,
-	})
-	checkErr(err)
-	headerStyleId, err := file.NewStyle(&excelize.Style{
-		Font:      &excelize.Font{Bold: true, Color: "#ffffff"},
-		Alignment: &excelize.Alignment{Horizontal: "center"},
-		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#091e42"}},
-	})
-	checkErr(err)
 	return &excelGenerator{f: file, sheet: "Sheet1",
-		currencyStyleId: currencyStyleId, borderedStyleId: tableStyleId, headerStyleId: headerStyleId}
+		currencyStyleId:     newStyle(file, &excelize.Style{CustomNumFmt: &fmtCode, Border: borders}),
+		currencyBoldStyleId: newStyle(file, &excelize.Style{CustomNumFmt: &fmtCode, Border: borders, Font: &excelize.Font{Bold: true}}),
+		borderedStyleId:     newStyle(file, &excelize.Style{Border: borders}),
+		headerStyleId: newStyle(file, &excelize.Style{
+			Font:      &excelize.Font{Bold: true, Color: "#ffffff"},
+			Alignment: &excelize.Alignment{Horizontal: "center"},
+			Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#091e42"}},
+		})}
 }
 
 func GenerateExcel(project Project, fileName string) {
@@ -275,7 +276,7 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 	exc.setFormulaAndNext(effortsWithRiskRange.sumFormula())
 	exc.setValAndNext("")
 	exc.setValAndNext("")
-	exc.setFormulaAndNext(totalsRange.sumFormula(), exc.currencyStyleId)
+	exc.setFormulaAndNext(totalsRange.sumFormula(), exc.currencyBoldStyleId)
 	exc.cr()
 	return res
 }
