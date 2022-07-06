@@ -124,6 +124,7 @@ func autoFixColWidths(exc *excelGenerator) {
 	// Autofit all columns according to their text content
 	cols, err := exc.f.GetCols(exc.sheet)
 	checkErr(err)
+	largestWidthMap := map[int]float64{}
 	for idx, col := range cols {
 		largestWidth := 0
 		for _, rowCell := range col {
@@ -135,9 +136,17 @@ func autoFixColWidths(exc *excelGenerator) {
 				largestWidth = int(math.Max(float64(largestWidth), 11))
 			}
 		}
+		largestWidthMap[idx] = float64(largestWidth)
+	}
+
+	// hack for merged
+	largestWidthMap[1] = (largestWidthMap[1] + largestWidthMap[2]) / 2
+	largestWidthMap[2] = largestWidthMap[1]
+
+	for idx := range cols {
 		name, err := excelize.ColumnNumberToName(idx + 1)
 		checkErr(err)
-		checkErr(exc.f.SetColWidth(exc.sheet, name, name, float64(largestWidth)))
+		checkErr(exc.f.SetColWidth(exc.sheet, name, name, largestWidthMap[idx]))
 	}
 }
 
