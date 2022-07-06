@@ -14,7 +14,8 @@ type excelGenerator struct {
 	currencyStyleId     int
 	currencyBoldStyleId int
 	headerStyleId       int
-	borderedStyleId     int
+	valueStyleId        int
+	taskNameStyleId     int
 }
 
 func (exc *excelGenerator) next() {
@@ -33,7 +34,7 @@ func (exc *excelGenerator) setVal(val interface{}, styles ...int) {
 }
 func getCellStyle(exc *excelGenerator, styles []int) int {
 	if styles == nil {
-		styles = []int{exc.borderedStyleId}
+		styles = []int{exc.valueStyleId}
 	}
 	return styles[0]
 }
@@ -88,7 +89,8 @@ func newExcelGenerator(currency Currency) *excelGenerator {
 	return &excelGenerator{f: file, sheet: "Sheet1",
 		currencyStyleId:     newStyle(file, &excelize.Style{CustomNumFmt: &fmtCode, Border: borders}),
 		currencyBoldStyleId: newStyle(file, &excelize.Style{CustomNumFmt: &fmtCode, Border: borders, Font: &excelize.Font{Bold: true}}),
-		borderedStyleId:     newStyle(file, &excelize.Style{Border: borders}),
+		valueStyleId:        newStyle(file, &excelize.Style{Border: borders}),
+		taskNameStyleId:     newStyle(file, &excelize.Style{Border: borders, Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#93c47d"}}}),
 		headerStyleId: newStyle(file, &excelize.Style{
 			Font:      &excelize.Font{Bold: true, Color: "#ffffff"},
 			Alignment: &excelize.Alignment{Horizontal: "center"},
@@ -146,7 +148,7 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 
 		exc.next()
 
-		exc.setVal(t.Title)
+		exc.setVal(t.Title, exc.taskNameStyleId)
 		exc.mergeNext(1)
 		exc.next()
 		v := map[string]string{}
