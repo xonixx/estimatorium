@@ -59,6 +59,9 @@ func (exc *excelGenerator) currentCellAbs(abs bool) string {
 	checkErr(err)
 	return name
 }
+func (exc *excelGenerator) setCurrCellStyle(styleId int) {
+	exc.setCellStyle(exc.currentCell(), exc.currentCell(), styleId)
+}
 func (exc *excelGenerator) setCellStyle(hCell, vCell string, styleId int) {
 	checkErr(exc.f.SetCellStyle(exc.sheet, hCell, vCell, styleId))
 }
@@ -189,7 +192,7 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 	effortsWithRiskRange := cellRange{}
 	totalsRange := cellRange{}
 	for i, r := range project.Team {
-		exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
+		exc.setCurrCellStyle(headerStyle(exc))
 		exc.setValAndNext(r.Title)
 		isFirst := i == 0
 		isLast := i == len(project.Team)-1
@@ -235,8 +238,8 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		}
 		exc.setFormulaAndNext(effortsWithRisksFormula)
 		rateCell := exc.currentCell()
-		exc.setCellStyle(rateCell, rateCell, exc.currencyStyleId)
-		exc.setValAndNext(r.Rate) // TODO fmt $
+		exc.setCurrCellStyle(exc.currencyStyleId)
+		exc.setValAndNext(r.Rate)
 		res.costsData[r.Id].countCell = exc.currentCell()
 		exc.setValAndNext(r.Count)
 		if isFirst {
@@ -244,16 +247,18 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		} else if isLast {
 			totalsRange.vCell = exc.currentCell()
 		}
+		exc.setCurrCellStyle(exc.currencyStyleId)
 		exc.setFormulaAndNext(fmt.Sprintf("%d*%s*%s",
 			project.TimeUnit.ToHours(), effortsWithRisksCell, rateCell))
 		exc.cr()
 	}
-	exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
+	exc.setCurrCellStyle(headerStyle(exc))
 	exc.setValAndNext("Sum")
 	exc.setFormulaAndNext(effortsRange.sumFormula())
 	exc.setFormulaAndNext(effortsWithRiskRange.sumFormula())
 	exc.setValAndNext("")
 	exc.setValAndNext("")
+	exc.setCurrCellStyle(exc.currencyStyleId)
 	exc.setFormulaAndNext(totalsRange.sumFormula())
 	exc.cr()
 	return res
@@ -273,7 +278,7 @@ func generateCostsTableHeader(exc *excelGenerator, project Project) {
 func generateDurationsTable(exc *excelGenerator, project Project, costsTableInfo costsTableInfo) {
 	generateDurationsTableHeader(exc)
 
-	exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
+	exc.setCurrCellStyle(headerStyle(exc))
 	exc.setValAndNext("Duration")
 
 	exc.setFormulaAndNext(durationFormula(project, costsTableInfo, func(cells *resourceCostsCells) string {
@@ -281,7 +286,7 @@ func generateDurationsTable(exc *excelGenerator, project Project, costsTableInfo
 	}))
 	exc.setValAndNext("Months")
 	exc.cr()
-	exc.setCellStyle(exc.currentCell(), exc.currentCell(), headerStyle(exc))
+	exc.setCurrCellStyle(headerStyle(exc))
 	exc.setValAndNext("With risks")
 	exc.setFormulaAndNext(durationFormula(project, costsTableInfo, func(cells *resourceCostsCells) string {
 		return cells.effortsWithRisksCell
