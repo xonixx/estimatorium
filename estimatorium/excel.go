@@ -332,8 +332,8 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 func generateCostsTableHeader(exc *excelGenerator, project Project) {
 	generateHeader(exc, []headerCell{
 		{title: ""},
-		{title: fmt.Sprintf("Efforts (%v)", project.TimeUnit)},
-		{title: "With Risk"},
+		{title: fmt.Sprintf("Efforts (%vs)", project.TimeUnit)},
+		{title: fmt.Sprintf("With Risks (%vs)", project.TimeUnit)},
 		{title: "Rate"},
 		{title: "Team"},
 		{title: ColTotal},
@@ -409,9 +409,9 @@ func generateTasksTableHeader(exc *excelGenerator, project Project) {
 	generateHeader(exc, []headerCell{
 		{title: ""},
 		{title: "", mergedCells: 1},
-		{title: fmt.Sprintf("Dev Efforts (%v)", project.TimeUnit), mergedCells: len(teamExcludingDerived) - 1},
+		{title: fmt.Sprintf("Dev Efforts (%vs)", project.TimeUnit), mergedCells: len(teamExcludingDerived) - 1},
 		{title: ""},
-		{title: fmt.Sprintf("Dev Efforts w/ Risks (%v)", project.TimeUnit), mergedCells: len(teamExcludingDerived) - 1},
+		{title: fmt.Sprintf("With Risks (%vs)", project.TimeUnit), mergedCells: len(teamExcludingDerived) - 1},
 	})
 
 	cols := []headerCell{
