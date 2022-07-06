@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/xuri/excelize/v2"
 	"strings"
+	"unicode/utf8"
 )
 
 type excelGenerator struct {
@@ -110,6 +111,23 @@ func GenerateExcel(project Project, fileName string) {
 	costsTableInfo := generateCostsTable(exc, project, taskTableInfo, parametersTableInfo)
 	exc.cr()
 	generateDurationsTable(exc, project, costsTableInfo)
+
+	// Autofit all columns according to their text content
+	cols, err := exc.f.GetCols(exc.sheet)
+	checkErr(err)
+	for idx, col := range cols {
+		largestWidth := 0
+		for _, rowCell := range col {
+			cellWidth := utf8.RuneCountInString(rowCell) + 2 // + 2 for margin
+			if cellWidth > largestWidth {
+				largestWidth = cellWidth
+			}
+		}
+		name, err := excelize.ColumnNumberToName(idx + 1)
+		checkErr(err)
+		checkErr(exc.f.SetColWidth(exc.sheet, name, name, float64(largestWidth)))
+	}
+
 	checkErr(exc.f.SaveAs(fileName))
 }
 
