@@ -13,7 +13,7 @@ type excelGenerator struct {
 	f               *excelize.File
 	currencyStyleId int
 	headerStyleId   int
-	tableStyleId    int
+	borderedStyleId int
 }
 
 func (exc *excelGenerator) next() {
@@ -26,15 +26,22 @@ func (exc *excelGenerator) cr() {
 	exc.rowZ++
 	exc.colZ = 0
 }
-func (exc *excelGenerator) setVal(val interface{}) {
+func (exc *excelGenerator) setVal(val interface{}, styles ...int) {
+	checkErr(exc.f.SetCellStyle(exc.sheet, exc.currentCell(), exc.currentCell(), getCellStyle(exc, styles)))
 	checkErr(exc.f.SetCellValue(exc.sheet, exc.currentCell(), val))
 }
-func (exc *excelGenerator) setValAndNext(val interface{}) {
-	//exc.setCurrCellStyle(exc.tableStyleId)
-	exc.setVal(val)
+func getCellStyle(exc *excelGenerator, styles []int) int {
+	if styles == nil {
+		styles = []int{exc.borderedStyleId}
+	}
+	return styles[0]
+}
+func (exc *excelGenerator) setValAndNext(val interface{}, styles ...int) {
+	exc.setVal(val, styles...)
 	exc.next()
 }
-func (exc *excelGenerator) setFormulaAndNext(formula string) {
+func (exc *excelGenerator) setFormulaAndNext(formula string, styles ...int) {
+	checkErr(exc.f.SetCellStyle(exc.sheet, exc.currentCell(), exc.currentCell(), getCellStyle(exc, styles)))
 	checkErr(exc.f.SetCellFormula(exc.sheet, exc.currentCell(), formula))
 	//fmt.Println(exc.f.GetCellFormula(exc.sheet, exc.currentCell()))
 	exc.next()
@@ -62,12 +69,6 @@ func (exc *excelGenerator) currentCellAbs(abs bool) string {
 	checkErr(err)
 	return name
 }
-func (exc *excelGenerator) setCurrCellStyle(styleId int) {
-	exc.setCellStyle(exc.currentCell(), exc.currentCell(), styleId)
-}
-func (exc *excelGenerator) setCellStyle(hCell, vCell string, styleId int) {
-	checkErr(exc.f.SetCellStyle(exc.sheet, hCell, vCell, styleId))
-}
 
 func newExcelGenerator(currency Currency) *excelGenerator {
 	file := excelize.NewFile()
@@ -90,7 +91,7 @@ func newExcelGenerator(currency Currency) *excelGenerator {
 	})
 	checkErr(err)
 	return &excelGenerator{f: file, sheet: "Sheet1",
-		currencyStyleId: currencyStyleId, tableStyleId: tableStyleId, headerStyleId: headerStyleId}
+		currencyStyleId: currencyStyleId, borderedStyleId: tableStyleId, headerStyleId: headerStyleId}
 }
 
 func GenerateExcel(project Project, fileName string) {
@@ -211,8 +212,7 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 	effortsWithRiskRange := cellRange{}
 	totalsRange := cellRange{}
 	for i, r := range project.Team {
-		exc.setCurrCellStyle(exc.headerStyleId)
-		exc.setValAndNext(r.Title)
+		exc.setValAndNext(r.Title, exc.headerStyleId)
 		isFirst := i == 0
 		isLast := i == len(project.Team)-1
 		if isFirst {
@@ -257,8 +257,7 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		}
 		exc.setFormulaAndNext(effortsWithRisksFormula)
 		rateCell := exc.currentCell()
-		exc.setCurrCellStyle(exc.currencyStyleId)
-		exc.setValAndNext(r.Rate)
+		exc.setValAndNext(r.Rate, exc.currencyStyleId)
 		res.costsData[r.Id].countCell = exc.currentCell()
 		exc.setValAndNext(r.Count)
 		if isFirst {
@@ -266,19 +265,16 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		} else if isLast {
 			totalsRange.vCell = exc.currentCell()
 		}
-		exc.setCurrCellStyle(exc.currencyStyleId)
 		exc.setFormulaAndNext(fmt.Sprintf("%d*%s*%s",
-			project.TimeUnit.ToHours(), effortsWithRisksCell, rateCell))
+			project.TimeUnit.ToHours(), effortsWithRisksCell, rateCell), exc.currencyStyleId)
 		exc.cr()
 	}
-	exc.setCurrCellStyle(exc.headerStyleId)
-	exc.setValAndNext("Sum")
+	exc.setValAndNext("Sum", exc.headerStyleId)
 	exc.setFormulaAndNext(effortsRange.sumFormula())
 	exc.setFormulaAndNext(effortsWithRiskRange.sumFormula())
 	exc.setValAndNext("")
 	exc.setValAndNext("")
-	exc.setCurrCellStyle(exc.currencyStyleId)
-	exc.setFormulaAndNext(totalsRange.sumFormula())
+	exc.setFormulaAndNext(totalsRange.sumFormula(), exc.currencyStyleId)
 	exc.cr()
 	return res
 }
@@ -297,16 +293,14 @@ func generateCostsTableHeader(exc *excelGenerator, project Project) {
 func generateDurationsTable(exc *excelGenerator, project Project, costsTableInfo costsTableInfo) {
 	generateDurationsTableHeader(exc)
 
-	exc.setCurrCellStyle(exc.headerStyleId)
-	exc.setValAndNext("Duration")
+	exc.setValAndNext("Duration", exc.headerStyleId)
 
 	exc.setFormulaAndNext(durationFormula(project, costsTableInfo, func(cells *resourceCostsCells) string {
 		return cells.effortsCell
 	}))
 	exc.setValAndNext("Months")
 	exc.cr()
-	exc.setCurrCellStyle(exc.headerStyleId)
-	exc.setValAndNext("With risks")
+	exc.setValAndNext("With risks", exc.headerStyleId)
 	exc.setFormulaAndNext(durationFormula(project, costsTableInfo, func(cells *resourceCostsCells) string {
 		return cells.effortsWithRisksCell
 	}))
@@ -400,16 +394,12 @@ func generateHeader(exc *excelGenerator, columns []headerCell) {
 	exc.generateHeader(exc.headerStyleId, columns)
 }
 func (exc *excelGenerator) generateHeader(styleId int, columns []headerCell) {
-	cell0 := exc.currentCell()
 	for _, col := range columns {
-		exc.setVal(col.title)
+		exc.setVal(col.title, styleId)
 		if col.mergedCells > 0 {
 			exc.mergeNext(col.mergedCells)
 		}
 		exc.next()
 	}
-	exc.prev()
-	cell1 := exc.currentCell()
-	exc.setCellStyle(cell0, cell1, styleId)
 	exc.cr()
 }
