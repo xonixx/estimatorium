@@ -4,6 +4,7 @@ package estimatorium
 import (
 	"fmt"
 	"github.com/xuri/excelize/v2"
+	"math"
 	"strings"
 	"unicode/utf8"
 )
@@ -112,6 +113,14 @@ func GenerateExcel(project Project, fileName string) {
 	exc.cr()
 	generateDurationsTable(exc, project, costsTableInfo)
 
+	autoFixColWidths(exc)
+
+	checkErr(exc.f.SaveAs(fileName))
+}
+
+const ColTotal = "Total"
+
+func autoFixColWidths(exc *excelGenerator) {
 	// Autofit all columns according to their text content
 	cols, err := exc.f.GetCols(exc.sheet)
 	checkErr(err)
@@ -122,13 +131,14 @@ func GenerateExcel(project Project, fileName string) {
 			if cellWidth > largestWidth {
 				largestWidth = cellWidth
 			}
+			if rowCell == ColTotal {
+				largestWidth = int(math.Max(float64(largestWidth), 11))
+			}
 		}
 		name, err := excelize.ColumnNumberToName(idx + 1)
 		checkErr(err)
 		checkErr(exc.f.SetColWidth(exc.sheet, name, name, float64(largestWidth)))
 	}
-
-	checkErr(exc.f.SaveAs(fileName))
 }
 
 type tasksTableInfo struct {
@@ -308,7 +318,7 @@ func generateCostsTableHeader(exc *excelGenerator, project Project) {
 		{title: "With Risk"},
 		{title: "Rate"},
 		{title: "Team"},
-		{title: "Total"},
+		{title: ColTotal},
 	})
 }
 
