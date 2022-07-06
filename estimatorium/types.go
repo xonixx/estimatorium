@@ -86,9 +86,10 @@ type Task struct {
 
 func StandardRisks() map[string]float32 {
 	return map[string]float32{
-		"low":    1.1,
-		"medium": 1.5,
-		"high":   2,
+		"low":     1.1,
+		"medium":  1.5,
+		"high":    2,
+		"extreme": 5,
 	}
 }
 

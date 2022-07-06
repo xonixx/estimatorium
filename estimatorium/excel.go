@@ -129,7 +129,10 @@ func autoFixColWidths(exc *excelGenerator) {
 	largestWidthMap := map[int]float64{}
 	for idx, col := range cols {
 		largestWidth := 0
-		for _, rowCell := range col {
+		for rIdx, rowCell := range col {
+			if rIdx == 0 {
+				continue
+			}
 			cellWidth := utf8.RuneCountInString(rowCell) + 2 // + 2 for margin
 			if cellWidth > largestWidth {
 				largestWidth = cellWidth
@@ -401,12 +404,20 @@ func risksFormula(risks map[string]float32, valCell string, risksCell string) st
 }
 
 func generateTasksTableHeader(exc *excelGenerator, project Project) {
+	teamExcludingDerived := project.TeamExcludingDerived()
+
+	generateHeader(exc, []headerCell{
+		{title: ""},
+		{title: "", mergedCells: 1},
+		{title: fmt.Sprintf("Dev Efforts (%v)", project.TimeUnit), mergedCells: len(teamExcludingDerived) - 1},
+		{title: ""},
+		{title: fmt.Sprintf("Dev Efforts w/ Risks (%v)", project.TimeUnit), mergedCells: len(teamExcludingDerived) - 1},
+	})
+
 	cols := []headerCell{
 		{title: "Feature"},
 		{title: "Story", mergedCells: 1},
 	}
-
-	teamExcludingDerived := project.TeamExcludingDerived()
 
 	for _, r := range teamExcludingDerived {
 		cols = append(cols, headerCell{title: r.Title})
