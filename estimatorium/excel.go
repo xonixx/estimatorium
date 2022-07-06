@@ -8,9 +8,10 @@ import (
 )
 
 type excelGenerator struct {
-	colZ, rowZ int    // current pos 0-based
-	sheet      string // current sheet
-	f          *excelize.File
+	colZ, rowZ      int    // current pos 0-based
+	sheet           string // current sheet
+	f               *excelize.File
+	currencyStyleId int
 }
 
 func (exc *excelGenerator) next() {
@@ -63,7 +64,11 @@ func (exc *excelGenerator) setCellStyle(hCell, vCell string, styleId int) {
 }
 
 func newExcelGenerator() *excelGenerator {
-	return &excelGenerator{f: excelize.NewFile(), sheet: "Sheet1"}
+	file := excelize.NewFile()
+	fmtCode := "#,##0[$€]"
+	currencyStyleId, err := file.NewStyle(&excelize.Style{CustomNumFmt: &fmtCode})
+	checkErr(err)
+	return &excelGenerator{f: file, sheet: "Sheet1", currencyStyleId: currencyStyleId}
 }
 
 func GenerateExcel(project Project, fileName string) {
@@ -230,6 +235,7 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		}
 		exc.setFormulaAndNext(effortsWithRisksFormula)
 		rateCell := exc.currentCell()
+		exc.setCellStyle(rateCell, rateCell, exc.currencyStyleId)
 		exc.setValAndNext(r.Rate) // TODO fmt $
 		res.costsData[r.Id].countCell = exc.currentCell()
 		exc.setValAndNext(r.Count)

@@ -61,6 +61,14 @@ func (c Currency) String() string {
 	return currency2Str[c]
 }
 
+var currency2Symbol = map[Currency]string{
+	Usd: "$", Eur: "€",
+}
+
+func (c Currency) Symbol() string {
+	return currency2Symbol[c]
+}
+
 type Resource struct {
 	Id      string
 	Title   string
