@@ -10,14 +10,15 @@ import (
 )
 
 type excelGenerator struct {
-	colZ, rowZ          int    // current pos 0-based
-	sheet               string // current sheet
-	f                   *excelize.File
-	currencyStyleId     int
-	currencyBoldStyleId int
-	headerStyleId       int
-	valueStyleId        int
-	taskNameStyleId     int
+	colZ, rowZ           int    // current pos 0-based
+	sheet                string // current sheet
+	f                    *excelize.File
+	currencyStyleId      int
+	currencyBoldStyleId  int
+	headerStyleId        int
+	valueStyleId         int
+	valueCenteredStyleId int
+	taskNameStyleId      int
 }
 
 func (exc *excelGenerator) next() {
@@ -89,10 +90,11 @@ func newExcelGenerator(currency Currency) *excelGenerator {
 		{Type: "right", Color: "000000", Style: 1},
 	}
 	return &excelGenerator{f: file, sheet: "Sheet1",
-		currencyStyleId:     newStyle(file, &excelize.Style{CustomNumFmt: &fmtCode, Border: borders}),
-		currencyBoldStyleId: newStyle(file, &excelize.Style{CustomNumFmt: &fmtCode, Border: borders, Font: &excelize.Font{Bold: true}}),
-		valueStyleId:        newStyle(file, &excelize.Style{Border: borders}),
-		taskNameStyleId:     newStyle(file, &excelize.Style{Border: borders, Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#93c47d"}}}),
+		currencyStyleId:      newStyle(file, &excelize.Style{CustomNumFmt: &fmtCode, Border: borders}),
+		currencyBoldStyleId:  newStyle(file, &excelize.Style{CustomNumFmt: &fmtCode, Border: borders, Font: &excelize.Font{Bold: true}}),
+		valueStyleId:         newStyle(file, &excelize.Style{Border: borders}),
+		valueCenteredStyleId: newStyle(file, &excelize.Style{Border: borders, Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"}}),
+		taskNameStyleId:      newStyle(file, &excelize.Style{Border: borders, Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#93c47d"}}}),
 		headerStyleId: newStyle(file, &excelize.Style{
 			Font:      &excelize.Font{Bold: true, Color: "#ffffff"},
 			Alignment: &excelize.Alignment{Horizontal: "center"},
@@ -171,7 +173,7 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 	currCat := ""
 
 	for i, t := range project.Tasks {
-		exc.setVal(t.Category)
+		exc.setVal(t.Category, exc.valueCenteredStyleId)
 
 		if i == 0 {
 			startCatCell = exc.currentCell()
