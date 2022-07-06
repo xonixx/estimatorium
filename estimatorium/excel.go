@@ -1,6 +1,5 @@
 package estimatorium
 
-// TODO auto-fit to width https://github.com/qax-os/excelize/issues/92
 import (
 	"fmt"
 	"github.com/xuri/excelize/v2"
