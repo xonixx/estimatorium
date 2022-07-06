@@ -63,16 +63,16 @@ func (exc *excelGenerator) setCellStyle(hCell, vCell string, styleId int) {
 	checkErr(exc.f.SetCellStyle(exc.sheet, hCell, vCell, styleId))
 }
 
-func newExcelGenerator() *excelGenerator {
+func newExcelGenerator(currency Currency) *excelGenerator {
 	file := excelize.NewFile()
-	fmtCode := "#,##0[$€]"
+	fmtCode := "[$" + currency.Symbol() + "]#,##0"
 	currencyStyleId, err := file.NewStyle(&excelize.Style{CustomNumFmt: &fmtCode})
 	checkErr(err)
 	return &excelGenerator{f: file, sheet: "Sheet1", currencyStyleId: currencyStyleId}
 }
 
 func GenerateExcel(project Project, fileName string) {
-	exc := newExcelGenerator()
+	exc := newExcelGenerator(project.Currency)
 	taskTableInfo := generateTasksTable(exc, project)
 	exc.cr()
 	parametersTableInfo := parametersTableInfo{}
