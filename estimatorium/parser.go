@@ -242,7 +242,6 @@ func parseProj(projData string) projParsed {
 				panic("task should have format: cat | title | efforts") // TODO convert to error
 			}
 			keyValPairs := parseKeyValPairs(taskParts[2])
-			delete(keyValPairs, "risks")
 			efforts := map[string]float32{}
 			for k, v := range keyValPairs {
 				if k != "risks" {
