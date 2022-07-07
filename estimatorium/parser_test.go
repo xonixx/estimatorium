@@ -35,3 +35,6 @@ func TestParsing1(t *testing.T) {
 func TestParsing2(t *testing.T) {
 	fmt.Println(ProjectFromString(projData))
 }
+func TestParsing3(t *testing.T) {
+	GenerateExcel(ProjectFromString(projData), "../Book3.xlsx")
+}
