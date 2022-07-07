@@ -11,11 +11,24 @@ import (
 type directiveVals struct {
 	value  string
 	values map[string]string
+	directiveDef
 }
 
 type projParsed struct {
 	directives   map[string]directiveVals // each directive can go at most one time
 	tasksRecords []taskRecord
+}
+
+func (projParsed projParsed) getSingleVal(directive string) *string {
+	v, exists := projParsed.directives[directive]
+	if !exists {
+		return nil
+	}
+	if v.directiveType == DtSingleValue {
+		return &v.value
+	} else {
+		panic(v.directiveType)
+	}
 }
 
 type taskRecord struct {
@@ -53,7 +66,32 @@ var directives = []directiveDef{
 var spaceRe = regexp.MustCompile("[ \t]+")
 
 func ProjectFromString(projData string) Project {
-	return Project{} // TODO
+	proj := Project{}
+
+	projParsed := parseProj(projData)
+
+	name := projParsed.getSingleVal("project")
+	if name != nil {
+		proj.Name = *name
+	}
+
+	timeUnit := projParsed.getSingleVal("time_unit")
+	if timeUnit != nil {
+		proj.TimeUnit = TimeUnitFromString(*timeUnit)
+	}
+
+	currency := projParsed.getSingleVal("currency")
+	if currency != nil {
+		proj.Currency = CurrencyFromString(*currency)
+	}
+
+	acceptancePercent := projParsed.getSingleVal("acceptance_percent")
+	if acceptancePercent != nil {
+		float, err := strconv.ParseFloat(*acceptancePercent, 32)
+		checkErr(err)
+		proj.AcceptancePercent = float32(float)
+	}
+
 }
 
 type parseMode int
@@ -97,9 +135,9 @@ func parseProj(projData string) projParsed {
 			for _, directive := range directives {
 				if parts[0] == directive.name {
 					if directive.directiveType == DtSingleValue {
-						projParsed.directives[directive.name] = directiveVals{value: strings.TrimSpace(parts[1])}
+						projParsed.directives[directive.name] = directiveVals{directiveDef: directive, value: strings.TrimSpace(parts[1])}
 					} else if directive.directiveType == DtKeyVal {
-						projParsed.directives[directive.name] = directiveVals{values: parseKeyValPairs(parts[1])}
+						projParsed.directives[directive.name] = directiveVals{directiveDef: directive, values: parseKeyValPairs(parts[1])}
 					}
 				}
 			}

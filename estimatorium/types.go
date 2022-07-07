@@ -47,6 +47,14 @@ func (tu TimeUnit) ToHours() int {
 	return timeUnit2Hrs[tu]
 }
 
+var timeUnitStr2Val = map[string]TimeUnit{
+	"hr": Hr, "day": Day,
+}
+
+func TimeUnitFromString(tu string) TimeUnit {
+	return timeUnitStr2Val[tu]
+}
+
 type Currency uint8
 
 const (
@@ -68,6 +76,14 @@ var currency2Symbol = map[Currency]string{
 
 func (c Currency) Symbol() string {
 	return currency2Symbol[c]
+}
+
+var currencyStr2Val = map[string]Currency{
+	"USD": Usd, "EUR": Eur,
+}
+
+func CurrencyFromString(curr string) Currency {
+	return currencyStr2Val[curr]
 }
 
 type Resource struct {
