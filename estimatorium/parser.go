@@ -160,7 +160,7 @@ func ProjectFromString(projData string) Project {
 
 	resourcesM := map[string]*Resource{}
 	for rId, cnt := range teamM {
-		resourcesM[rId] = &Resource{Count: cnt, Title: standardResourceTypes[rId]}
+		resourcesM[rId] = &Resource{Id: rId, Count: cnt, Title: standardResourceTypes[rId]}
 	}
 
 	for rId, rate := range ratesM {
