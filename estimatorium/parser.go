@@ -20,9 +20,30 @@ type taskRecord struct {
 	risk     string
 }
 
-type lineParser interface {
-	myDirective() string
-	parse(line string) (directiveParsed, error)
+type directiveType int8
+
+const (
+	DtSingleValue directiveType = iota
+	DtKeyVal
+)
+
+type directiveDef struct {
+	name          string
+	directiveType directiveType
+	//parse(line string) (directiveParsed, error)
+}
+
+var directives = []directiveDef{
+	{"project", DtSingleValue},
+	{"author", DtSingleValue},
+	{"currency", DtSingleValue},
+	{"time_unit", DtSingleValue},
+	{"acceptance_percent", DtSingleValue},
+	{"risks", DtKeyVal},
+	{"rates", DtKeyVal},
+	{"formula", DtKeyVal},
+	{"desired_duration", DtSingleValue},
+	{"team", DtKeyVal},
 }
 
 func ProjectFromString(projData string) Project {

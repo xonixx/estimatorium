@@ -5,6 +5,7 @@ import "sort"
 // TODO validate Project model: 1. correct resources in tasks 2. correct risks etc.
 
 type Project struct {
+	Name              string
 	TimeUnit          TimeUnit
 	Currency          Currency
 	AcceptancePercent float32 // "Cleanup & acceptance" parameter

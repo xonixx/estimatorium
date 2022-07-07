@@ -7,6 +7,7 @@ import (
 
 func main() {
 	project := estimatorium.Project{
+		Name:              "proj name",
 		TimeUnit:          estimatorium.Day,
 		AcceptancePercent: 10,
 		Currency:          estimatorium.Usd,

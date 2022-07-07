@@ -4,7 +4,7 @@ author email@example.com
 # params currency=usd time_unit=day acceptancePercent=10
 currency usd
 time_unit day
-acceptancePercent 10
+acceptance_percent 10
 
 risks low=1.1 medium=1.5 high=2
 rates be=40 fe=30 qa=20
