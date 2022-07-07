@@ -30,6 +30,17 @@ func (projParsed projParsed) getSingleVal(directive string) *string {
 		panic(v.directiveType)
 	}
 }
+func (projParsed projParsed) getKVPairs(directive string) *map[string]string {
+	v, exists := projParsed.directives[directive]
+	if !exists {
+		return nil
+	}
+	if v.directiveType == DtKeyVal {
+		return &v.values
+	} else {
+		panic(v.directiveType)
+	}
+}
 
 type taskRecord struct {
 	category string
@@ -70,28 +81,103 @@ func ProjectFromString(projData string) Project {
 
 	projParsed := parseProj(projData)
 
-	name := projParsed.getSingleVal("project")
-	if name != nil {
-		proj.Name = *name
+	{
+		name := projParsed.getSingleVal("project")
+		if name != nil {
+			proj.Name = *name
+		}
 	}
 
-	timeUnit := projParsed.getSingleVal("time_unit")
-	if timeUnit != nil {
-		proj.TimeUnit = TimeUnitFromString(*timeUnit)
+	{
+		timeUnit := projParsed.getSingleVal("time_unit")
+		if timeUnit != nil {
+			proj.TimeUnit = TimeUnitFromString(*timeUnit)
+		}
 	}
 
-	currency := projParsed.getSingleVal("currency")
-	if currency != nil {
-		proj.Currency = CurrencyFromString(*currency)
+	{
+		currency := projParsed.getSingleVal("currency")
+		if currency != nil {
+			proj.Currency = CurrencyFromString(*currency)
+		}
 	}
 
-	acceptancePercent := projParsed.getSingleVal("acceptance_percent")
-	if acceptancePercent != nil {
-		float, err := strconv.ParseFloat(*acceptancePercent, 32)
-		checkErr(err)
-		proj.AcceptancePercent = float32(float)
+	{
+		acceptancePercent := projParsed.getSingleVal("acceptance_percent")
+		if acceptancePercent != nil {
+			float, err := strconv.ParseFloat(*acceptancePercent, 32)
+			checkErr(err)
+			proj.AcceptancePercent = float32(float)
+		}
 	}
 
+	{
+		risks := projParsed.getKVPairs("risks")
+		if risks != nil {
+			proj.Risks = map[string]float32{}
+			for k, v := range *risks {
+				float, err := strconv.ParseFloat(v, 32)
+				checkErr(err)
+				proj.Risks[k] = float32(float)
+			}
+		}
+	}
+
+	ratesM := map[string]float64{}
+	formulaM := map[string]string{}
+	teamM := map[string]int{}
+
+	{
+		rates := projParsed.getKVPairs("rates")
+		if rates != nil {
+			for k, v := range *rates {
+				float, err := strconv.ParseFloat(v, 32)
+				checkErr(err)
+				ratesM[k] = float
+			}
+		}
+	}
+
+	{
+		formula := projParsed.getKVPairs("formula")
+		if formula != nil {
+			for k, v := range *formula {
+				formulaM[k] = v
+			}
+		}
+	}
+
+	{
+		team := projParsed.getKVPairs("team")
+		if team != nil {
+			for k, v := range *team {
+				intVal, err := strconv.ParseInt(v, 10, 32)
+				checkErr(err)
+				teamM[k] = int(intVal)
+			}
+		}
+	}
+
+	resourcesM := map[string]*Resource{}
+	for rId, cnt := range teamM {
+		resourcesM[rId] = &Resource{Count: cnt, Title: standardResourceTypes[rId]}
+	}
+
+	for rId, rate := range ratesM {
+		resourcesM[rId].Rate = rate
+	}
+
+	for rId, formula := range formulaM {
+		resourcesM[rId].Formula = formula
+	}
+
+	for _, resource := range resourcesM {
+		proj.Team = append(proj.Team, *resource)
+	}
+
+	// TODO desired duration
+
+	return proj
 }
 
 type parseMode int

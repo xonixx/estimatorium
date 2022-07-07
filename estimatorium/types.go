@@ -90,7 +90,7 @@ type Resource struct {
 	Id      string
 	Title   string
 	Rate    float64
-	Count   uint8
+	Count   int
 	Formula string
 }
 
