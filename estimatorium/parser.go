@@ -2,6 +2,7 @@ package estimatorium
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -49,37 +50,83 @@ var directives = []directiveDef{
 	{"team", DtKeyVal},
 }
 
-var spaceRe = regexp.MustCompile("[ \t]")
+var spaceRe = regexp.MustCompile("[ \t]+")
 
 func ProjectFromString(projData string) Project {
 	return Project{} // TODO
 }
 
+type parseMode int
+
+const (
+	pmDirectives parseMode = iota
+	pmTasks
+)
+
+func parseKeyValPairs(str string) map[string]string {
+	str = strings.TrimSpace(str)
+	values := map[string]string{}
+	valParts := spaceRe.Split(str, -1)
+	for _, valPart := range valParts {
+		keyVal := strings.SplitN(valPart, "=", 2)
+		values[keyVal[0]] = keyVal[1]
+	}
+	return values
+}
+
+// TODO wrong directive error
+// TODO handle comment explicitly
 func parseProj(projData string) projParsed {
-	projParsed := projParsed{}
-	parsedDirectives := map[string]directiveVals{}
+	projParsed := projParsed{
+		directives:   map[string]directiveVals{},
+		tasksRecords: []taskRecord{},
+	}
 	lines := strings.Split(projData, "\n")
+	mode := pmDirectives
 	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.Index(line, "#") == 0 {
+			continue
+		}
 		parts := spaceRe.Split(line, 2)
 		if parts[0] == "tasks" {
-			break
+			mode = pmTasks
+			continue
 		}
-		for _, directive := range directives {
-			if parts[0] == directive.name {
-				if directive.directiveType == DtSingleValue {
-					parsedDirectives[directive.name] = directiveVals{value: strings.TrimSpace(parts[1])}
-				} else if directive.directiveType == DtKeyVal {
-					valParts := spaceRe.Split(parts[1], -1)
-					values := map[string]string{}
-					for _, valPart := range valParts {
-						keyVal := strings.SplitN(valPart, "=", 2)
-						values[keyVal[0]] = keyVal[1]
+		if mode == pmDirectives {
+			for _, directive := range directives {
+				if parts[0] == directive.name {
+					if directive.directiveType == DtSingleValue {
+						projParsed.directives[directive.name] = directiveVals{value: strings.TrimSpace(parts[1])}
+					} else if directive.directiveType == DtKeyVal {
+						projParsed.directives[directive.name] = directiveVals{values: parseKeyValPairs(parts[1])}
 					}
-					parsedDirectives[directive.name] = directiveVals{values: values}
 				}
 			}
+		} else if mode == pmTasks {
+			taskParts := strings.Split(line, "|")
+			if len(taskParts) != 3 {
+				panic("task should have format: cat | title | efforts") // TODO convert to error
+			}
+			keyValPairs := parseKeyValPairs(taskParts[2])
+			delete(keyValPairs, "risks")
+			efforts := map[string]float32{}
+			for k, v := range keyValPairs {
+				if k != "risks" {
+					float, err := strconv.ParseFloat(v, 32)
+					checkErr(err)
+					efforts[k] = float32(float)
+				}
+			}
+			projParsed.tasksRecords = append(projParsed.tasksRecords, taskRecord{
+				category: strings.TrimSpace(taskParts[0]),
+				title:    strings.TrimSpace(taskParts[1]),
+				efforts:  efforts,
+				risk:     keyValPairs["risks"],
+			})
+		} else {
+			panic("Unknown mode")
 		}
 	}
-	projParsed.directives = parsedDirectives
 	return projParsed
 }
