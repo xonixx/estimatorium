@@ -57,7 +57,7 @@ func ProjectFromString(projData string) Project {
 
 func parseProj(projData string) projParsed {
 	projParsed := projParsed{}
-	var parsedDirectives map[string]directiveVals
+	parsedDirectives := map[string]directiveVals{}
 	lines := strings.Split(projData, "\n")
 	for _, line := range lines {
 		parts := spaceRe.Split(line, 2)
@@ -73,7 +73,7 @@ func parseProj(projData string) projParsed {
 					values := map[string]string{}
 					for _, valPart := range valParts {
 						keyVal := strings.SplitN(valPart, "=", 2)
-						values[keyVal[0]] = values[keyVal[1]]
+						values[keyVal[0]] = keyVal[1]
 					}
 					parsedDirectives[directive.name] = directiveVals{values: values}
 				}
