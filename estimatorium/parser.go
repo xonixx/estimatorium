@@ -175,6 +175,15 @@ func ProjectFromString(projData string) Project {
 		proj.Team = append(proj.Team, *resource)
 	}
 
+	for _, tasksRecord := range projParsed.tasksRecords {
+		proj.Tasks = append(proj.Tasks, Task{
+			Category: tasksRecord.category,
+			Title:    tasksRecord.title,
+			Risk:     tasksRecord.risk,
+			Work:     tasksRecord.efforts,
+		})
+	}
+
 	// TODO desired duration
 
 	return proj
