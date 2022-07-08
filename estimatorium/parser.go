@@ -140,7 +140,9 @@ func ProjectFromString(projData string) (Project, error) {
 			proj.Risks = map[string]float32{}
 			for k, v := range *risks {
 				float, err := strconv.ParseFloat(v, 32)
-				checkErr(err)
+				if err != nil || float < 1 {
+					errors.addError("Wrong risk value for " + k + ": " + v)
+				}
 				proj.Risks[k] = float32(float)
 			}
 		}
@@ -155,7 +157,9 @@ func ProjectFromString(projData string) (Project, error) {
 		if rates != nil {
 			for k, v := range *rates {
 				float, err := strconv.ParseFloat(v, 32)
-				checkErr(err)
+				if err != nil || float < 0 {
+					errors.addError("Wrong rate value for " + k + ": " + v)
+				}
 				ratesM[k] = float
 			}
 		}
@@ -175,7 +179,9 @@ func ProjectFromString(projData string) (Project, error) {
 		if team != nil {
 			for k, v := range *team {
 				intVal, err := strconv.ParseInt(v, 10, 32)
-				checkErr(err)
+				if err != nil || intVal < 0 {
+					errors.addError("Wrong team count value for " + k + ": " + v)
+				}
 				teamM[k] = int(intVal)
 			}
 		}

@@ -53,47 +53,34 @@ func TestParsing2(t *testing.T) {
 	//fmt.Println(project)
 }
 
-func TestWrongCurrency(t *testing.T) {
-	project, err := ProjectFromString(`
-currency wrong
-`)
+func mustBeError(t *testing.T, s string) {
+	project, err := ProjectFromString(s)
 	fmt.Println(project)
 	fmt.Println(err)
 	if err == nil {
 		t.Fatalf("should be error")
 	}
+}
+
+func TestWrongCurrency(t *testing.T) {
+	mustBeError(t, `currency wrong`)
 }
 
 func TestWrongTimeUnit(t *testing.T) {
-	project, err := ProjectFromString(`
-time_unit wrong
-`)
-	fmt.Println(project)
-	fmt.Println(err)
-	if err == nil {
-		t.Fatalf("should be error")
-	}
+	mustBeError(t, `time_unit wrong`)
 }
 
 func TestWrongAcceptancePercent1(t *testing.T) {
-	project, err := ProjectFromString(`
-acceptance_percent wrong
-`)
-	fmt.Println(project)
-	fmt.Println(err)
-	if err == nil {
-		t.Fatalf("should be error")
-	}
+	mustBeError(t, `acceptance_percent wrong`)
 }
 func TestWrongAcceptancePercent2(t *testing.T) {
-	project, err := ProjectFromString(`
-acceptance_percent 123
-`)
-	fmt.Println(project)
-	fmt.Println(err)
-	if err == nil {
-		t.Fatalf("should be error")
-	}
+	mustBeError(t, `acceptance_percent 123`)
+}
+func TestWrongRiskVal1(t *testing.T) {
+	mustBeError(t, `risks be=0.5`)
+}
+func TestWrongRiskVal2(t *testing.T) {
+	mustBeError(t, `risks be=abc`)
 }
 
 //func TestParsing3(t *testing.T) {
