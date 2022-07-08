@@ -30,12 +30,13 @@ func (p Project) TeamExcludingDerived() []Resource {
 type TimeUnit uint8
 
 const (
-	Hr TimeUnit = iota
+	TimeUnitUnknown TimeUnit = iota
+	Hr
 	Day
 )
 
 var timeUnit2Str = map[TimeUnit]string{
-	Hr: "hr", Day: "day",
+	TimeUnitUnknown: "TimeUnitUnknown", Hr: "hr", Day: "day",
 }
 
 func (tu TimeUnit) String() string {
@@ -67,7 +68,7 @@ const (
 )
 
 var currency2Str = map[Currency]string{
-	CurrencyUnknown: "unknown", Usd: "USD", Eur: "EUR",
+	CurrencyUnknown: "CurrencyUnknown", Usd: "USD", Eur: "EUR",
 }
 
 func (c Currency) String() string {

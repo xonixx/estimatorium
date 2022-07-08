@@ -92,7 +92,7 @@ func (ppe *ProjectParseError) Error() string {
 
 func ProjectFromString(projData string) (Project, error) {
 	proj := Project{}
-	err := &ProjectParseError{}
+	errors := &ProjectParseError{}
 
 	projParsed := parseProj(projData)
 
@@ -107,6 +107,9 @@ func ProjectFromString(projData string) (Project, error) {
 		timeUnit := projParsed.getSingleVal("time_unit")
 		if timeUnit != nil {
 			proj.TimeUnit = TimeUnitFromString(*timeUnit)
+			if proj.TimeUnit == TimeUnitUnknown {
+				errors.addError("Unknown time_unit: " + *timeUnit)
+			}
 		}
 	}
 
@@ -115,7 +118,7 @@ func ProjectFromString(projData string) (Project, error) {
 		if currency != nil {
 			proj.Currency = CurrencyFromString(*currency)
 			if proj.Currency == CurrencyUnknown {
-				err.addError("Unknown currency: " + *currency)
+				errors.addError("Unknown currency: " + *currency)
 			}
 		}
 	}
@@ -124,7 +127,9 @@ func ProjectFromString(projData string) (Project, error) {
 		acceptancePercent := projParsed.getSingleVal("acceptance_percent")
 		if acceptancePercent != nil {
 			float, err := strconv.ParseFloat(*acceptancePercent, 32)
-			checkErr(err)
+			if err != nil || float < 0 || float > 100 {
+				errors.addError("Wrong acceptance_percent: " + *acceptancePercent)
+			}
 			proj.AcceptancePercent = float32(float)
 		}
 	}
@@ -204,10 +209,10 @@ func ProjectFromString(projData string) (Project, error) {
 
 	// TODO desired duration
 
-	if !err.hasErrors() {
+	if !errors.hasErrors() {
 		return proj, nil
 	}
-	return proj, err
+	return proj, errors
 }
 
 type parseMode int

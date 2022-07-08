@@ -58,6 +58,39 @@ func TestWrongCurrency(t *testing.T) {
 currency wrong
 `)
 	fmt.Println(project)
+	fmt.Println(err)
+	if err == nil {
+		t.Fatalf("should be error")
+	}
+}
+
+func TestWrongTimeUnit(t *testing.T) {
+	project, err := ProjectFromString(`
+time_unit wrong
+`)
+	fmt.Println(project)
+	fmt.Println(err)
+	if err == nil {
+		t.Fatalf("should be error")
+	}
+}
+
+func TestWrongAcceptancePercent1(t *testing.T) {
+	project, err := ProjectFromString(`
+acceptance_percent wrong
+`)
+	fmt.Println(project)
+	fmt.Println(err)
+	if err == nil {
+		t.Fatalf("should be error")
+	}
+}
+func TestWrongAcceptancePercent2(t *testing.T) {
+	project, err := ProjectFromString(`
+acceptance_percent 123
+`)
+	fmt.Println(project)
+	fmt.Println(err)
 	if err == nil {
 		t.Fatalf("should be error")
 	}
