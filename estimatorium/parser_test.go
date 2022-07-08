@@ -57,10 +57,10 @@ func TestWrongCurrency(t *testing.T) {
 	project, err := ProjectFromString(`
 currency wrong
 `)
+	fmt.Println(project)
 	if err == nil {
 		t.Fatalf("should be error")
 	}
-	fmt.Println(project)
 }
 
 //func TestParsing3(t *testing.T) {

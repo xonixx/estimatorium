@@ -80,13 +80,13 @@ type ProjectParseError struct {
 	errors []string
 }
 
-func (ppe ProjectParseError) hasErrors() bool {
+func (ppe *ProjectParseError) hasErrors() bool {
 	return len(ppe.errors) > 0
 }
-func (ppe ProjectParseError) addError(err string) {
+func (ppe *ProjectParseError) addError(err string) {
 	ppe.errors = append(ppe.errors, err)
 }
-func (ppe ProjectParseError) Error() string {
+func (ppe *ProjectParseError) Error() string {
 	return strings.Join(ppe.errors, "\n")
 }
 
@@ -205,7 +205,7 @@ func ProjectFromString(projData string) (Project, error) {
 	// TODO desired duration
 
 	if !err.hasErrors() {
-		err = nil
+		return proj, nil
 	}
 	return proj, err
 }

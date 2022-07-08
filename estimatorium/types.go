@@ -1,6 +1,9 @@
 package estimatorium
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 // TODO validate Project model: 1. correct resources in tasks 2. correct risks etc.
 
@@ -84,7 +87,7 @@ var currencyStr2Val = map[string]Currency{
 }
 
 func CurrencyFromString(curr string) Currency {
-	return currencyStr2Val[curr]
+	return currencyStr2Val[strings.ToUpper(curr)]
 }
 
 type Resource struct {
