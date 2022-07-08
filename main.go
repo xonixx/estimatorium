@@ -3,10 +3,11 @@ package main
 import (
 	"estimatorium/estimatorium"
 	"fmt"
+	"os"
 )
 
 func main() {
-	project := estimatorium.Project{
+	/*project := estimatorium.Project{
 		Name:              "proj name",
 		TimeUnit:          estimatorium.Day,
 		AcceptancePercent: 10,
@@ -26,7 +27,17 @@ func main() {
 			{Category: "API", Title: "Some Task 3", Work: map[string]float32{"be": 3, "fe": 3}},
 			{Category: "API", Title: "Some Task 3", Work: map[string]float32{"be": 3, "fe": 3}},
 		},
+	}*/
+
+	bytes, err := os.ReadFile("proj_estimate2.txt")
+	if err != nil {
+		panic(err)
+	}
+	projectStr := string(bytes)
+	project, err := estimatorium.ProjectFromString(projectStr)
+	if err != nil {
+		panic(err)
 	}
 	fmt.Println(project)
-	estimatorium.GenerateExcel(project, "Book2.xlsx")
+	estimatorium.GenerateExcel(project, "Book4.xlsx")
 }
