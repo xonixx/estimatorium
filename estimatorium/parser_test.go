@@ -30,11 +30,39 @@ API		| API task 2 	| be=2
 `
 
 func TestParsing1(t *testing.T) {
-	fmt.Println(parseProj(projData))
+	proj := parseProj(projData)
+	if len(proj.tasksRecords) != 4 {
+		t.Fatalf("wrong tasksRecord cnt")
+	}
+	if *proj.getSingleVal("currency") != "usd" {
+		t.Fatalf("wrong currency")
+	}
+	//fmt.Println(proj)
 }
 func TestParsing2(t *testing.T) {
-	fmt.Println(ProjectFromString(projData))
+	project, err := ProjectFromString(projData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(project.Tasks) != 4 {
+		t.Fatalf("wrong tasksRecord cnt")
+	}
+	if project.Currency != Usd {
+		t.Fatalf("wrong currency")
+	}
+	//fmt.Println(project)
 }
-func TestParsing3(t *testing.T) {
-	GenerateExcel(ProjectFromString(projData), "../Book3.xlsx")
+
+func TestWrongCurrency(t *testing.T) {
+	project, err := ProjectFromString(`
+currency wrong
+`)
+	if err == nil {
+		t.Fatalf("should be error")
+	}
+	fmt.Println(project)
 }
+
+//func TestParsing3(t *testing.T) {
+//	GenerateExcel(ProjectFromString(projData), "../Book3.xlsx")
+//}

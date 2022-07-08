@@ -58,12 +58,13 @@ func TimeUnitFromString(tu string) TimeUnit {
 type Currency uint8
 
 const (
-	Usd Currency = iota
+	CurrencyUnknown Currency = iota
+	Usd
 	Eur
 )
 
 var currency2Str = map[Currency]string{
-	Usd: "USD", Eur: "EUR",
+	CurrencyUnknown: "unknown", Usd: "USD", Eur: "EUR",
 }
 
 func (c Currency) String() string {

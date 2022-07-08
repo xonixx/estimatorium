@@ -62,22 +62,37 @@ type directiveDef struct {
 }
 
 var directives = []directiveDef{
-	{"project", DtSingleValue},
-	{"author", DtSingleValue},
-	{"currency", DtSingleValue},
-	{"time_unit", DtSingleValue},
-	{"acceptance_percent", DtSingleValue},
-	{"risks", DtKeyVal},
-	{"rates", DtKeyVal},
-	{"formula", DtKeyVal},
-	{"desired_duration", DtSingleValue},
-	{"team", DtKeyVal},
+	{name: "project", directiveType: DtSingleValue},
+	{name: "author", directiveType: DtSingleValue},
+	{name: "currency", directiveType: DtSingleValue},
+	{name: "time_unit", directiveType: DtSingleValue},
+	{name: "acceptance_percent", directiveType: DtSingleValue},
+	{name: "risks", directiveType: DtKeyVal},
+	{name: "rates", directiveType: DtKeyVal},
+	{name: "formula", directiveType: DtKeyVal},
+	{name: "desired_duration", directiveType: DtSingleValue},
+	{name: "team", directiveType: DtKeyVal},
 }
 
 var spaceRe = regexp.MustCompile("[ \t]+")
 
-func ProjectFromString(projData string) Project {
+type ProjectParseError struct {
+	errors []string
+}
+
+func (ppe ProjectParseError) hasErrors() bool {
+	return len(ppe.errors) > 0
+}
+func (ppe ProjectParseError) addError(err string) {
+	ppe.errors = append(ppe.errors, err)
+}
+func (ppe ProjectParseError) Error() string {
+	return strings.Join(ppe.errors, "\n")
+}
+
+func ProjectFromString(projData string) (Project, error) {
 	proj := Project{}
+	err := &ProjectParseError{}
 
 	projParsed := parseProj(projData)
 
@@ -99,6 +114,9 @@ func ProjectFromString(projData string) Project {
 		currency := projParsed.getSingleVal("currency")
 		if currency != nil {
 			proj.Currency = CurrencyFromString(*currency)
+			if proj.Currency == CurrencyUnknown {
+				err.addError("Unknown currency: " + *currency)
+			}
 		}
 	}
 
@@ -186,7 +204,10 @@ func ProjectFromString(projData string) Project {
 
 	// TODO desired duration
 
-	return proj
+	if !err.hasErrors() {
+		err = nil
+	}
+	return proj, err
 }
 
 type parseMode int
