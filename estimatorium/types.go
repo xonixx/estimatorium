@@ -2,7 +2,6 @@ package estimatorium
 
 import (
 	"sort"
-	"strings"
 )
 
 // TODO validate Project model: 1. correct resources in tasks 2. correct risks etc.
@@ -13,6 +12,7 @@ type Project struct {
 	Currency          Currency
 	AcceptancePercent float32 // "Cleanup & acceptance" parameter
 	Team              []Resource
+	DesiredDuration   *DesiredDuration
 	Risks             map[string]float32
 	Tasks             []Task
 }
@@ -36,69 +36,18 @@ func (p Project) ResourceById(rId string) *Resource {
 	return nil
 }
 
-type TimeUnit uint8
+type DesiredDuration struct {
+	duration float32
+	unit     DesiredDurationTimeUnit
+}
+
+type DesiredDurationTimeUnit int
 
 const (
-	TimeUnitUnknown TimeUnit = iota
-	Hr
-	Day
+	DDTUUnknown DesiredDurationTimeUnit = iota
+	DDTUMonths
+	DDTUWeeks
 )
-
-var timeUnit2Str = map[TimeUnit]string{
-	TimeUnitUnknown: "TimeUnitUnknown", Hr: "hr", Day: "day",
-}
-
-func (tu TimeUnit) String() string {
-	return timeUnit2Str[tu]
-}
-
-var timeUnit2Hrs = map[TimeUnit]int{
-	Hr: 1, Day: 8,
-}
-
-func (tu TimeUnit) ToHours() int {
-	return timeUnit2Hrs[tu]
-}
-
-var timeUnitStr2Val = map[string]TimeUnit{
-	"hr": Hr, "day": Day,
-}
-
-func TimeUnitFromString(tu string) TimeUnit {
-	return timeUnitStr2Val[tu]
-}
-
-type Currency uint8
-
-const (
-	CurrencyUnknown Currency = iota
-	Usd
-	Eur
-)
-
-var currency2Str = map[Currency]string{
-	CurrencyUnknown: "CurrencyUnknown", Usd: "USD", Eur: "EUR",
-}
-
-func (c Currency) String() string {
-	return currency2Str[c]
-}
-
-var currency2Symbol = map[Currency]string{
-	Usd: "$", Eur: "€",
-}
-
-func (c Currency) Symbol() string {
-	return currency2Symbol[c]
-}
-
-var currencyStr2Val = map[string]Currency{
-	"USD": Usd, "EUR": Eur,
-}
-
-func CurrencyFromString(curr string) Currency {
-	return currencyStr2Val[strings.ToUpper(curr)]
-}
 
 type Resource struct {
 	Id      string

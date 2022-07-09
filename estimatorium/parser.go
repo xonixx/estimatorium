@@ -7,6 +7,8 @@ import (
 )
 
 // TODO validate mandatory directives present
+// TODO validate rate(s) absent for resources in tasks
+// TODO validate derived resources not referred in tasks
 
 type directiveVals struct {
 	value  string
@@ -157,6 +159,9 @@ func ProjectFromString(projData string) (Project, error) {
 				}
 				proj.Risks[k] = float32(float)
 			}
+		} else {
+			// apply default risks
+			proj.Risks = StandardRisks()
 		}
 	}
 

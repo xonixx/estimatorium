@@ -43,10 +43,7 @@ func TestParsing1(t *testing.T) {
 	//fmt.Println(proj)
 }
 func TestParsing2(t *testing.T) {
-	project, err := ProjectFromString(projData)
-	if err != nil {
-		t.Fatal(err)
-	}
+	project := mustNoError(t, projData)
 	if len(project.Tasks) != 4 {
 		t.Fatalf("wrong tasksRecord cnt")
 	}
@@ -63,6 +60,16 @@ func mustBeError(t *testing.T, s string) {
 	if err == nil {
 		t.Fatalf("should be error")
 	}
+}
+
+func mustNoError(t *testing.T, s string) Project {
+	project, err := ProjectFromString(s)
+	fmt.Println(project)
+	fmt.Println(err)
+	if err != nil {
+		t.Fatalf("should be error")
+	}
+	return project
 }
 
 func TestWrongCurrency(t *testing.T) {
@@ -101,6 +108,13 @@ func TestWrongRiskName(t *testing.T) {
 risks aaa=10
 tasks
 a|b|risks=wrong`)
+}
+func TestDefaultRisksApply(t *testing.T) {
+	mustNoError(t, `
+team be=1
+tasks
+a|b|be=1 risks=low
+`)
 }
 func TestWrongResourceName(t *testing.T) {
 	mustBeError(t, `
