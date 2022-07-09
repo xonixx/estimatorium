@@ -96,6 +96,12 @@ func TestRepeatingDirective(t *testing.T) {
 currency usd
 currency eur`)
 }
+func TestWrongRiskName(t *testing.T) {
+	mustBeError(t, `
+risks aaa=10
+tasks
+a|b|risks=wrong`)
+}
 
 //func TestParsing3(t *testing.T) {
 //	GenerateExcel(ProjectFromString(projData), "../Book3.xlsx")

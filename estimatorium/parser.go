@@ -217,10 +217,16 @@ func ProjectFromString(projData string) (Project, error) {
 	}
 
 	for _, tasksRecord := range projParsed.tasksRecords {
+		risk := tasksRecord.risk
+		if risk != "" {
+			if _, exists := proj.Risks[risk]; !exists {
+				errors.addError("Wrong risks name: " + risk)
+			}
+		}
 		proj.Tasks = append(proj.Tasks, Task{
 			Category: tasksRecord.category,
 			Title:    tasksRecord.title,
-			Risk:     tasksRecord.risk,
+			Risk:     risk,
 			Work:     tasksRecord.efforts,
 		})
 	}
