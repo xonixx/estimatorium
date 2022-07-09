@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// 1. each directive can go at most one time
+// TODO validate mandatory directives present
 
 type directiveVals struct {
 	value  string
@@ -273,7 +273,9 @@ linesLoop:
 		if mode == pmDirectives {
 			for _, directive := range directives {
 				if parts[0] == directive.name {
-					if directive.directiveType == DtSingleValue {
+					if _, exists := projParsed.directives[directive.name]; exists {
+						errors.addError("Duplicating directive: " + directive.name)
+					} else if directive.directiveType == DtSingleValue {
 						projParsed.directives[directive.name] = directiveVals{directiveDef: directive, value: strings.TrimSpace(parts[1])}
 					} else if directive.directiveType == DtKeyVal {
 						projParsed.directives[directive.name] = directiveVals{directiveDef: directive, values: parseKeyValPairs(parts[1])}

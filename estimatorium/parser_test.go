@@ -86,8 +86,15 @@ func TestWrongRiskVal2(t *testing.T) {
 	mustBeError(t, `risks be=abc`)
 }
 func TestWrongDirective(t *testing.T) {
-	mustBeError(t, `wrong 123
+	mustBeError(t, `
+wrong 123
 wrong1 hello`)
+}
+
+func TestRepeatingDirective(t *testing.T) {
+	mustBeError(t, `
+currency usd
+currency eur`)
 }
 
 //func TestParsing3(t *testing.T) {
