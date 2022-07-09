@@ -18,10 +18,16 @@ func (tu TimeUnit) String() string {
 	return timeUnit2Str[tu]
 }
 
+const (
+	WorkingHoursADay   = 8
+	WorkingDaysInWeek  = 5
+	WorkingDaysInMonth = 21
+)
+
 var timeUnit2Hrs = map[TimeUnit]int{
-	Hr: 1, Day: 8,
-	Week:  5 * 8,  // 5 working days in week
-	Month: 21 * 8, // 21 working days in mth
+	Hr: 1, Day: WorkingHoursADay,
+	Week:  WorkingDaysInWeek * WorkingHoursADay,
+	Month: WorkingDaysInMonth * WorkingHoursADay,
 }
 
 func (tu TimeUnit) ToHours() int {

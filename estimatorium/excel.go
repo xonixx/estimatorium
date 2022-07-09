@@ -372,7 +372,7 @@ func durationFormula(project Project, costsTableInfo costsTableInfo, f func(*res
 	}
 	sb.WriteString(")*")
 	sb.WriteString(fmt.Sprintf("%d", project.TimeUnit.ToHours()))
-	sb.WriteString("/8/21,1)")
+	sb.WriteString(fmt.Sprintf("/%d/%d,1)", WorkingHoursADay, WorkingDaysInMonth))
 	return sb.String()
 }
 
