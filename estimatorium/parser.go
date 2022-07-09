@@ -76,14 +76,14 @@ var (
 	directiveTeam              = newDirectiveDef("team", DtKeyVal)
 )
 
-var directives []directiveDef
+var directives = map[string]directiveDef{}
 
 func newDirectiveDef(name string, directiveType directiveType) directiveDef {
 	d := directiveDef{
 		name:          name,
 		directiveType: directiveType,
 	}
-	directives = append(directives, d)
+	directives[name] = d
 	return d
 }
 
@@ -302,7 +302,6 @@ func parseProj(projData string) (projParsed, error) {
 	}
 	lines := strings.Split(projData, "\n")
 	mode := pmDirectives
-linesLoop:
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.Index(line, "#") == 0 {
@@ -314,19 +313,17 @@ linesLoop:
 			continue
 		}
 		if mode == pmDirectives {
-			for _, directive := range directives {
-				if parts[0] == directive.name {
-					if _, exists := projParsed.directives[directive.name]; exists {
-						errors.addError("Duplicating directive: " + directive.name)
-					} else if directive.directiveType == DtSingleValue {
-						projParsed.directives[directive.name] = directiveVals{directiveDef: directive, value: strings.TrimSpace(parts[1])}
-					} else if directive.directiveType == DtKeyVal {
-						projParsed.directives[directive.name] = directiveVals{directiveDef: directive, values: parseKeyValPairs(parts[1])}
-					}
-					continue linesLoop
+			if directive, found := directives[parts[0]]; found {
+				if _, exists := projParsed.directives[directive.name]; exists {
+					errors.addError("Duplicating directive: " + directive.name)
+				} else if directive.directiveType == DtSingleValue {
+					projParsed.directives[directive.name] = directiveVals{directiveDef: directive, value: strings.TrimSpace(parts[1])}
+				} else if directive.directiveType == DtKeyVal {
+					projParsed.directives[directive.name] = directiveVals{directiveDef: directive, values: parseKeyValPairs(parts[1])}
 				}
+			} else {
+				errors.addError("Unknown directive: " + parts[0])
 			}
-			errors.addError("Unknown directive: " + parts[0])
 		} else if mode == pmTasks {
 			taskParts := strings.Split(line, "|")
 			if len(taskParts) != 3 {
