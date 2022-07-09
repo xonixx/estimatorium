@@ -370,9 +370,7 @@ func durationFormula(project Project, costsTableInfo costsTableInfo, f func(*res
 			sb.WriteString(",")
 		}
 	}
-	sb.WriteString(")*")
-	sb.WriteString(fmt.Sprintf("%d", project.TimeUnit.ToHours()))
-	sb.WriteString(fmt.Sprintf("/%d/%d,1)", WorkingHoursADay, WorkingDaysInMonth))
+	sb.WriteString(fmt.Sprintf(")*%d/%d/%d,1)", project.TimeUnit.ToHours(), WorkingHoursADay, WorkingDaysInMonth))
 	return sb.String()
 }
 
