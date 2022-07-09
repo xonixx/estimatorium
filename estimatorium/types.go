@@ -1,7 +1,10 @@
 package estimatorium
 
 import (
+	"errors"
 	"sort"
+	"strconv"
+	"strings"
 )
 
 // TODO validate Project model: 1. correct resources in tasks 2. correct risks etc.
@@ -39,6 +42,29 @@ func (p Project) ResourceById(rId string) *Resource {
 type Duration struct {
 	duration float32
 	unit     TimeUnit
+}
+
+// ParseDuration should parse "10mth", "3 days", ".5weeks"
+// should not parse "aaa", "zz day", "10bbb", ".5 ccc dd"
+func ParseDuration(str string) (Duration, error) {
+	str = strings.TrimSpace(str)
+	for k, timeUnit := range timeUnitStr2Val {
+		for _, attemptUnit := range []string{k, k + "s"} {
+			if strings.HasSuffix(str, attemptUnit) {
+				val := str[:len(str)-len(attemptUnit)]
+				val = strings.TrimSpace(val)
+				float, err := strconv.ParseFloat(val, 32)
+				if err != nil {
+					return Duration{}, err
+				}
+				return Duration{
+					duration: float32(float),
+					unit:     timeUnit,
+				}, nil
+			}
+		}
+	}
+	return Duration{}, errors.New("unknown time unit")
 }
 
 type Resource struct {

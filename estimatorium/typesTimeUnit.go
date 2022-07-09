@@ -25,7 +25,8 @@ const (
 )
 
 var timeUnit2Hrs = map[TimeUnit]int{
-	Hr: 1, Day: WorkingHoursADay,
+	Hr:    1,
+	Day:   WorkingHoursADay,
 	Week:  WorkingDaysInWeek * WorkingHoursADay,
 	Month: WorkingDaysInMonth * WorkingHoursADay,
 }
