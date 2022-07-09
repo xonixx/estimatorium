@@ -12,7 +12,7 @@ type Project struct {
 	Currency          Currency
 	AcceptancePercent float32 // "Cleanup & acceptance" parameter
 	Team              []Resource
-	DesiredDuration   *DesiredDuration
+	DesiredDuration   *Duration
 	Risks             map[string]float32
 	Tasks             []Task
 }
@@ -36,18 +36,10 @@ func (p Project) ResourceById(rId string) *Resource {
 	return nil
 }
 
-type DesiredDuration struct {
+type Duration struct {
 	duration float32
-	unit     DesiredDurationTimeUnit
+	unit     TimeUnit
 }
-
-type DesiredDurationTimeUnit int
-
-const (
-	DDTUUnknown DesiredDurationTimeUnit = iota
-	DDTUMonths
-	DDTUWeeks
-)
 
 type Resource struct {
 	Id      string
