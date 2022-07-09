@@ -37,7 +37,7 @@ func TestParsing1(t *testing.T) {
 	if len(proj.tasksRecords) != 4 {
 		t.Fatalf("wrong tasksRecord cnt")
 	}
-	if *proj.getSingleVal("currency") != "usd" {
+	if *proj.getSingleVal(directiveCurrency) != "usd" {
 		t.Fatalf("wrong currency")
 	}
 	//fmt.Println(proj)

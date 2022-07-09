@@ -21,8 +21,8 @@ type projParsed struct {
 	tasksRecords []taskRecord
 }
 
-func (projParsed projParsed) getSingleVal(directive string) *string {
-	v, exists := projParsed.directives[directive]
+func (projParsed projParsed) getSingleVal(directive directiveDef) *string {
+	v, exists := projParsed.directives[directive.name]
 	if !exists {
 		return nil
 	}
@@ -32,8 +32,8 @@ func (projParsed projParsed) getSingleVal(directive string) *string {
 		panic(v.directiveType)
 	}
 }
-func (projParsed projParsed) getKVPairs(directive string) *map[string]string {
-	v, exists := projParsed.directives[directive]
+func (projParsed projParsed) getKVPairs(directive directiveDef) *map[string]string {
+	v, exists := projParsed.directives[directive.name]
 	if !exists {
 		return nil
 	}
@@ -63,17 +63,28 @@ type directiveDef struct {
 	directiveType directiveType
 }
 
-var directives = []directiveDef{
-	{name: "project", directiveType: DtSingleValue},
-	{name: "author", directiveType: DtSingleValue},
-	{name: "currency", directiveType: DtSingleValue},
-	{name: "time_unit", directiveType: DtSingleValue},
-	{name: "acceptance_percent", directiveType: DtSingleValue},
-	{name: "risks", directiveType: DtKeyVal},
-	{name: "rates", directiveType: DtKeyVal},
-	{name: "formula", directiveType: DtKeyVal},
-	{name: "desired_duration", directiveType: DtSingleValue},
-	{name: "team", directiveType: DtKeyVal},
+var (
+	directiveProject           = newDirectiveDef("project", DtSingleValue)
+	directiveAuthor            = newDirectiveDef("author", DtSingleValue)
+	directiveCurrency          = newDirectiveDef("currency", DtSingleValue)
+	directiveTimeUnit          = newDirectiveDef("time_unit", DtSingleValue)
+	directiveAcceptancePercent = newDirectiveDef("acceptance_percent", DtSingleValue)
+	directiveRisks             = newDirectiveDef("risks", DtKeyVal)
+	directiveRates             = newDirectiveDef("rates", DtKeyVal)
+	directiveFormula           = newDirectiveDef("formula", DtKeyVal)
+	directiveDesiredDuration   = newDirectiveDef("desired_duration", DtSingleValue)
+	directiveTeam              = newDirectiveDef("team", DtKeyVal)
+)
+
+var directives []directiveDef
+
+func newDirectiveDef(name string, directiveType directiveType) directiveDef {
+	d := directiveDef{
+		name:          name,
+		directiveType: directiveType,
+	}
+	directives = append(directives, d)
+	return d
 }
 
 var spaceRe = regexp.MustCompile("[ \t]+")
@@ -111,14 +122,20 @@ func ProjectFromString(projData string) (Project, error) {
 	errors.addOtherError(err)
 
 	{
-		name := projParsed.getSingleVal("project")
+		name := projParsed.getSingleVal(directiveProject)
 		if name != nil {
 			proj.Name = *name
 		}
 	}
+	{
+		author := projParsed.getSingleVal(directiveAuthor)
+		if author != nil {
+			proj.Author = *author
+		}
+	}
 
 	{
-		timeUnit := projParsed.getSingleVal("time_unit")
+		timeUnit := projParsed.getSingleVal(directiveTimeUnit)
 		if timeUnit != nil {
 			proj.TimeUnit = TimeUnitFromString(*timeUnit)
 			if proj.TimeUnit == TimeUnitUnknown {
@@ -128,7 +145,7 @@ func ProjectFromString(projData string) (Project, error) {
 	}
 
 	{
-		currency := projParsed.getSingleVal("currency")
+		currency := projParsed.getSingleVal(directiveCurrency)
 		if currency != nil {
 			proj.Currency = CurrencyFromString(*currency)
 			if proj.Currency == CurrencyUnknown {
@@ -138,7 +155,7 @@ func ProjectFromString(projData string) (Project, error) {
 	}
 
 	{
-		acceptancePercent := projParsed.getSingleVal("acceptance_percent")
+		acceptancePercent := projParsed.getSingleVal(directiveAcceptancePercent)
 		if acceptancePercent != nil {
 			float, err := strconv.ParseFloat(*acceptancePercent, 32)
 			if err != nil || float < 0 || float > 100 {
@@ -149,7 +166,7 @@ func ProjectFromString(projData string) (Project, error) {
 	}
 
 	{
-		risks := projParsed.getKVPairs("risks")
+		risks := projParsed.getKVPairs(directiveRisks)
 		if risks != nil {
 			proj.Risks = map[string]float32{}
 			for k, v := range *risks {
@@ -170,7 +187,7 @@ func ProjectFromString(projData string) (Project, error) {
 	teamM := map[string]int{}
 
 	{
-		rates := projParsed.getKVPairs("rates")
+		rates := projParsed.getKVPairs(directiveRates)
 		if rates != nil {
 			for k, v := range *rates {
 				float, err := strconv.ParseFloat(v, 32)
@@ -183,7 +200,7 @@ func ProjectFromString(projData string) (Project, error) {
 	}
 
 	{
-		formula := projParsed.getKVPairs("formula")
+		formula := projParsed.getKVPairs(directiveFormula)
 		if formula != nil {
 			for k, v := range *formula {
 				formulaM[k] = v
@@ -192,7 +209,7 @@ func ProjectFromString(projData string) (Project, error) {
 	}
 
 	{
-		team := projParsed.getKVPairs("team")
+		team := projParsed.getKVPairs(directiveTeam)
 		if team != nil {
 			for k, v := range *team {
 				intVal, err := strconv.ParseInt(v, 10, 32)
@@ -242,7 +259,16 @@ func ProjectFromString(projData string) (Project, error) {
 		})
 	}
 
-	// TODO desired duration
+	{
+		desiredDurationStr := projParsed.getSingleVal(directiveDesiredDuration)
+		if desiredDurationStr != nil {
+			duration, err := ParseDuration(*desiredDurationStr)
+			if err != nil {
+				errors.addError("Unable to parse desired duration: " + err.Error())
+			}
+			proj.DesiredDuration = duration
+		}
+	}
 
 	if !errors.hasErrors() {
 		return proj, nil

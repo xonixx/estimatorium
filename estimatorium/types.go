@@ -11,11 +11,12 @@ import (
 
 type Project struct {
 	Name              string
+	Author            string
 	TimeUnit          TimeUnit
 	Currency          Currency
 	AcceptancePercent float32 // "Cleanup & acceptance" parameter
 	Team              []Resource
-	DesiredDuration   *Duration
+	DesiredDuration   Duration
 	Risks             map[string]float32
 	Tasks             []Task
 }
