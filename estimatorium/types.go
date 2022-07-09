@@ -27,6 +27,15 @@ func (p Project) TeamExcludingDerived() []Resource {
 	return res
 }
 
+func (p Project) ResourceById(rId string) *Resource {
+	for _, r := range p.Team {
+		if r.Id == rId {
+			return &r
+		}
+	}
+	return nil
+}
+
 type TimeUnit uint8
 
 const (

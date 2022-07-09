@@ -102,6 +102,12 @@ risks aaa=10
 tasks
 a|b|risks=wrong`)
 }
+func TestWrongResourceName(t *testing.T) {
+	mustBeError(t, `
+team be=1
+tasks
+a|b|zz=1`)
+}
 
 //func TestParsing3(t *testing.T) {
 //	GenerateExcel(ProjectFromString(projData), "../Book3.xlsx")

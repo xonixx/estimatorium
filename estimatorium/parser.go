@@ -223,11 +223,17 @@ func ProjectFromString(projData string) (Project, error) {
 				errors.addError("Wrong risks name: " + risk)
 			}
 		}
+		efforts := tasksRecord.efforts
+		for k := range efforts {
+			if proj.ResourceById(k) == nil {
+				errors.addError("Wrong resource name in efforts: " + k)
+			}
+		}
 		proj.Tasks = append(proj.Tasks, Task{
 			Category: tasksRecord.category,
 			Title:    tasksRecord.title,
 			Risk:     risk,
-			Work:     tasksRecord.efforts,
+			Work:     efforts,
 		})
 	}
 
