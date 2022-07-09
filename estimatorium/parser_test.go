@@ -30,7 +30,10 @@ API		| API task 2 	| be=2
 `
 
 func TestParsing1(t *testing.T) {
-	proj := parseProj(projData)
+	proj, err := parseProj(projData)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(proj.tasksRecords) != 4 {
 		t.Fatalf("wrong tasksRecord cnt")
 	}
@@ -81,6 +84,10 @@ func TestWrongRiskVal1(t *testing.T) {
 }
 func TestWrongRiskVal2(t *testing.T) {
 	mustBeError(t, `risks be=abc`)
+}
+func TestWrongDirective(t *testing.T) {
+	mustBeError(t, `wrong 123
+wrong1 hello`)
 }
 
 //func TestParsing3(t *testing.T) {

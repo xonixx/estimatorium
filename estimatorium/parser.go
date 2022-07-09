@@ -90,11 +90,23 @@ func (ppe *ProjectParseError) Error() string {
 	return strings.Join(ppe.errors, "\n")
 }
 
+func (ppe *ProjectParseError) addOtherError(err error) {
+	if err == nil {
+		return
+	}
+	if parseError, ok := err.(*ProjectParseError); ok {
+		ppe.errors = append(ppe.errors, parseError.errors...)
+	} else {
+		ppe.addError(err.Error())
+	}
+}
+
 func ProjectFromString(projData string) (Project, error) {
 	proj := Project{}
 	errors := &ProjectParseError{}
 
-	projParsed := parseProj(projData)
+	projParsed, err := parseProj(projData)
+	errors.addOtherError(err)
 
 	{
 		name := projParsed.getSingleVal("project")
@@ -239,15 +251,15 @@ func parseKeyValPairs(str string) map[string]string {
 	return values
 }
 
-// TODO wrong directive error
-// TODO handle comment explicitly
-func parseProj(projData string) projParsed {
+func parseProj(projData string) (projParsed, error) {
+	errors := &ProjectParseError{}
 	projParsed := projParsed{
 		directives:   map[string]directiveVals{},
 		tasksRecords: []taskRecord{},
 	}
 	lines := strings.Split(projData, "\n")
 	mode := pmDirectives
+linesLoop:
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.Index(line, "#") == 0 {
@@ -266,8 +278,10 @@ func parseProj(projData string) projParsed {
 					} else if directive.directiveType == DtKeyVal {
 						projParsed.directives[directive.name] = directiveVals{directiveDef: directive, values: parseKeyValPairs(parts[1])}
 					}
+					continue linesLoop
 				}
 			}
+			errors.addError("Unknown directive: " + parts[0])
 		} else if mode == pmTasks {
 			taskParts := strings.Split(line, "|")
 			if len(taskParts) != 3 {
@@ -292,5 +306,8 @@ func parseProj(projData string) projParsed {
 			panic("Unknown mode")
 		}
 	}
-	return projParsed
+	if !errors.hasErrors() {
+		return projParsed, nil
+	}
+	return projParsed, errors
 }
