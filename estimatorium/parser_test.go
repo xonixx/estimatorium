@@ -124,22 +124,39 @@ tasks
 a|b|zz=1`)
 }
 func TestDesiredDuration(t *testing.T) {
-	mustNoError(t, `
+	project := mustNoError(t, `
 time_unit day
 desired_duration 1mth
 tasks
 a|b|be=35 fe=2 risks=low
-`) // TODO check team be=2 fe=1
+`)
+	teamAsMap := project.TeamAsMap()
+	if teamAsMap["be"].Count != 2 {
+		t.Fatalf("be must be 2")
+	}
+	if teamAsMap["fe"].Count != 1 {
+		t.Fatalf("fe must be 1")
+	}
 }
 
 func TestDesiredDurationWithDerived(t *testing.T) {
-	mustNoError(t, `
+	project := mustNoError(t, `
 time_unit day
 desired_duration 1mth
 formula qa=be
 tasks
 a|b|be=35 fe=2 risks=low
-`) // TODO check team be=2 fe=1 qa=1
+`)
+	teamAsMap := project.TeamAsMap()
+	if teamAsMap["be"].Count != 2 {
+		t.Fatalf("be must be 2")
+	}
+	if teamAsMap["fe"].Count != 1 {
+		t.Fatalf("fe must be 1")
+	}
+	if teamAsMap["qa"].Count != 1 {
+		t.Fatalf("qa must be 1")
+	}
 }
 
 //func TestParsing3(t *testing.T) {

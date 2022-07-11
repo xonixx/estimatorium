@@ -32,6 +32,10 @@ func (p *Project) Calculate() ProjectCalculationResult {
 			resource1 := resource
 			resource1.Count = cnt
 			calculatedTeam = append(calculatedTeam, resource1)
+		} else if resource.Formula != "" {
+			resource1 := resource
+			resource1.Count = 1 // TODO
+			calculatedTeam = append(calculatedTeam, resource1)
 		}
 	}
 	p.Team = calculatedTeam

@@ -30,7 +30,13 @@ func (p Project) TeamExcludingDerived() []Resource {
 	}
 	return res
 }
-
+func (p Project) TeamAsMap() map[string]Resource {
+	res := map[string]Resource{}
+	for _, resource := range p.Team {
+		res[resource.Id] = resource
+	}
+	return res
+}
 func (p Project) ResourceById(rId string) *Resource {
 	for _, r := range p.Team {
 		if r.Id == rId {
