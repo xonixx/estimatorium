@@ -16,7 +16,7 @@ type Project struct {
 	Currency          Currency
 	AcceptancePercent float32 // "Cleanup & acceptance" parameter
 	Team              []Resource
-	DesiredDuration   Duration
+	DesiredDuration   Duration // This will be treated as including risks
 	Risks             map[string]float32
 	Tasks             []Task
 }
@@ -43,6 +43,10 @@ func (p Project) ResourceById(rId string) *Resource {
 type Duration struct {
 	duration float32
 	unit     TimeUnit
+}
+
+func (d Duration) ToHours() float32 {
+	return float32(d.unit.ToHours()) * d.duration
 }
 
 // ParseDuration should parse "10mth", "3 days", ".5weeks"

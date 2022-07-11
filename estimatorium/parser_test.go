@@ -64,6 +64,7 @@ func mustBeError(t *testing.T, s string) {
 
 func mustNoError(t *testing.T, s string) Project {
 	project, err := ProjectFromString(s)
+	project.Calculate()
 	fmt.Println(project)
 	fmt.Println(err)
 	if err != nil {
@@ -121,6 +122,14 @@ func TestWrongResourceName(t *testing.T) {
 team be=1
 tasks
 a|b|zz=1`)
+}
+func TestNoTeam(t *testing.T) {
+	mustNoError(t, `
+time_unit day
+desired_duration 1mth
+tasks
+a|b|be=1 fe=2 risks=low
+`)
 }
 
 //func TestParsing3(t *testing.T) {

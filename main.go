@@ -38,6 +38,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	project.Calculate()
 	fmt.Println(project)
 	estimatorium.GenerateExcel(project, "Book4.xlsx")
 }

@@ -8,7 +8,8 @@ import (
 
 // TODO validate mandatory directives present
 // TODO validate rate(s) absent for resources in tasks
-// TODO validate derived resources not referred in tasks
+// TODO validate that derived resources are not referred in tasks
+// TODO how can we set custom team resources (w titles)
 
 type directiveVals struct {
 	value  string
@@ -217,6 +218,11 @@ func ProjectFromString(projData string) (Project, error) {
 					errors.addError("Wrong team count value for " + k + ": " + v)
 				}
 				teamM[k] = int(intVal)
+			}
+		} else {
+			// use standard team
+			for r, _ := range standardResourceTypes {
+				teamM[r] = 1
 			}
 		}
 	}
