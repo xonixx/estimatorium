@@ -27,7 +27,7 @@ func (p *Project) Calculate() ProjectCalculationResult {
 	for _, resource := range p.Team {
 		workOfRes := work[resource.Id]
 		if workOfRes > 0 {
-			cntF := desiredDurationHrs / workOfRes
+			cntF := workOfRes / desiredDurationHrs
 			cnt := int(math.Ceil(float64(cntF)))
 			resource1 := resource
 			resource1.Count = cnt
