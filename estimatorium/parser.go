@@ -25,18 +25,20 @@ type projParsed struct {
 }
 
 type resourceRecord struct {
-	id      string
-	cnt     int
-	rate    float64
-	title   string
-	formula string
+	id            string
+	resourceProps map[string]string
+	//cnt     int
+	//rate    float64
+	//title   string
+	//formula string
 }
 
 type taskRecord struct {
 	category string
 	title    string
-	efforts  map[string]float64
-	risk     string
+	//efforts  map[string]float64
+	//risk     string
+	taskProps map[string]string
 }
 
 func (projParsed projParsed) getSingleVal(directive directiveDef) *string {
@@ -82,10 +84,7 @@ var (
 	directiveTimeUnit          = newDirectiveDef("time_unit", DtSingleValue)
 	directiveAcceptancePercent = newDirectiveDef("acceptance_percent", DtSingleValue)
 	directiveRisks             = newDirectiveDef("risks", DtKeyVal)
-	//directiveRates             = newDirectiveDef("rates", DtKeyVal)
-	//directiveFormula           = newDirectiveDef("formula", DtKeyVal)
-	directiveDesiredDuration = newDirectiveDef("desired_duration", DtSingleValue)
-	//directiveTeam              = newDirectiveDef("team", DtKeyVal)
+	directiveDesiredDuration   = newDirectiveDef("desired_duration", DtSingleValue)
 )
 
 var directives = map[string]directiveDef{}
@@ -111,17 +110,20 @@ func (ppe *ProjectParseError) hasErrors() bool {
 func (ppe *ProjectParseError) addError(error string) {
 	ppe.errors = append(ppe.errors, error)
 }
-func (ppe *ProjectParseError) intOrAddError(v string, errorF string, args ...interface{}) int {
+func (ppe *ProjectParseError) addErrorf(errorF string, args ...any) {
+	ppe.addError(fmt.Sprintf(errorF, args...))
+}
+func (ppe *ProjectParseError) intOrAddError(v string, errorF string, args ...any) int {
 	intVal, err := strconv.ParseInt(v, 10, 32)
 	if err != nil {
-		ppe.addError(fmt.Sprintf(errorF, args...))
+		ppe.addErrorf(errorF, args...)
 	}
 	return int(intVal)
 }
-func (ppe *ProjectParseError) floatOrAddError(v string, errorF string, args ...interface{}) float64 {
+func (ppe *ProjectParseError) floatOrAddErrorf(v string, errorF string, args ...any) float64 {
 	float, err := strconv.ParseFloat(v, 32)
 	if err != nil {
-		ppe.addError(fmt.Sprintf(errorF, args...))
+		ppe.addErrorf(errorF, args...)
 	}
 	return float
 }
@@ -139,6 +141,8 @@ func (ppe *ProjectParseError) addOtherError(err error) {
 		ppe.addError(err.Error())
 	}
 }
+
+const risksKey = "risks"
 
 func ProjectFromString(projData string) (Project, error) {
 	proj := Project{}
@@ -198,7 +202,7 @@ func ProjectFromString(projData string) (Project, error) {
 			for k, v := range *risks {
 				float, err := strconv.ParseFloat(v, 32)
 				if err != nil || float < 1 {
-					errors.addError("Wrong risk value for " + k + ": " + v)
+					errors.addErrorf("Wrong risk value for %s: %s", k, v)
 				}
 				proj.Risks[k] = float
 			}
@@ -269,22 +273,31 @@ func ProjectFromString(projData string) (Project, error) {
 		proj.Team = append(proj.Team, *resource)
 	}
 
-	for _, tasksRecord := range projParsed.tasksRecords {
-		risk := tasksRecord.risk
+	for _, taskRecord := range projParsed.tasksRecords {
+		risk := taskRecord.taskProps[risksKey]
 		if risk != "" {
 			if _, exists := proj.Risks[risk]; !exists {
 				errors.addError("Wrong risks name: " + risk)
 			}
 		}
-		efforts := tasksRecord.efforts
+		efforts := map[string]float64{}
+		for k, v := range taskRecord.taskProps {
+			if k != risksKey {
+				effort := errors.floatOrAddErrorf(v, "Wrong effort for task %s|%s for resource %s: %s", taskRecord.category, taskRecord.title, k, v)
+				if effort < 0 {
+					errors.addErrorf("Effort should be >= 0 for task %s|%s for resource %s: %s", taskRecord.category, taskRecord.title, k, v)
+				}
+				efforts[k] = effort
+			}
+		}
 		for k := range efforts {
 			if proj.ResourceById(k) == nil {
 				errors.addError("Wrong resource name in efforts: " + k)
 			}
 		}
 		proj.Tasks = append(proj.Tasks, Task{
-			Category: tasksRecord.category,
-			Title:    tasksRecord.title,
+			Category: taskRecord.category,
+			Title:    taskRecord.title,
 			Risk:     risk,
 			Work:     efforts,
 		})
@@ -363,25 +376,27 @@ func parseProj(projData string) (projParsed, error) {
 			if len(taskParts) != 3 {
 				panic("task should have format: cat | title | efforts") // TODO convert to error
 			}
-			keyValPairs := parseKeyValPairs(taskParts[2])
-			efforts := map[string]float64{}
+			/*efforts := map[string]float64{}
 			for k, v := range keyValPairs {
 				if k != "risks" {
 					float, err := strconv.ParseFloat(v, 32)
 					checkErr(err)
 					efforts[k] = float
 				}
-			}
+			}*/
 			projParsed.tasksRecords = append(projParsed.tasksRecords, taskRecord{
 				category: strings.TrimSpace(taskParts[0]),
 				title:    strings.TrimSpace(taskParts[1]),
-				efforts:  efforts,
-				risk:     keyValPairs["risks"],
+				//efforts:  efforts,
+				//risk:     keyValPairs["risks"],
+				taskProps: parseKeyValPairs(taskParts[2]),
 			})
 		} else if mode == pmTeam {
-			resourceId := parts[0]
-			resourceProps := parseKeyValPairs(parts[1])
-			var cnt int
+			projParsed.team = append(projParsed.team, resourceRecord{
+				id:            parts[0],
+				resourceProps: parseKeyValPairs(parts[1]),
+			})
+			/*var cnt int
 			if cntStr, exists := resourceProps["cnt"]; exists {
 				cnt = errors.intOrAddError(cntStr, "Wrong team count value for %s: %s", resourceId, cntStr)
 				if cnt < 0 {
@@ -390,7 +405,7 @@ func parseProj(projData string) (projParsed, error) {
 			}
 			var rate float64
 			if rateStr, exists := resourceProps["rate"]; exists {
-				rate = errors.floatOrAddError(rateStr, "Wrong rate value for %s: %s", resourceId, rateStr)
+				rate = errors.floatOrAddErrorf(rateStr, "Wrong rate value for %s: %s", resourceId, rateStr)
 				if rate < 0 {
 					errors.addError(fmt.Sprintf("Rate must be >= 0 for %s: %s", resourceId, rateStr))
 				}
@@ -401,7 +416,7 @@ func parseProj(projData string) (projParsed, error) {
 				rate:    rate,
 				title:   resourceProps["title"],
 				formula: resourceProps["formula"],
-			})
+			})*/
 		} else {
 			panic("Unknown mode")
 		}

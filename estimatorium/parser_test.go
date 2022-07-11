@@ -114,14 +114,32 @@ a|b|risks=wrong`)
 }
 func TestDefaultRisksApply(t *testing.T) {
 	mustNoError(t, `
-team be=1
+team
+be cnt=1
 tasks
 a|b|be=1 risks=low
 `)
 }
+func TestWrongTaskEffort1(t *testing.T) {
+	mustBeError(t, `
+team 
+be cnt=1
+tasks
+a|b|be=-5
+`)
+}
+func TestWrongTaskEffort2(t *testing.T) {
+	mustBeError(t, `
+team 
+be cnt=1
+tasks
+a|b|be=wrong
+`)
+}
 func TestWrongResourceName(t *testing.T) {
 	mustBeError(t, `
-team be=1
+team 
+be cnt=1
 tasks
 a|b|zz=1`)
 }
