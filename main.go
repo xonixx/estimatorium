@@ -29,7 +29,7 @@ func main() {
 		},
 	}*/
 
-	bytes, err := os.ReadFile("proj_estimate3.txt")
+	bytes, err := os.ReadFile("proj_estimate3_dd.txt")
 	if err != nil {
 		panic(err)
 	}

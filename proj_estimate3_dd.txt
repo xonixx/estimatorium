@@ -1,0 +1,24 @@
+project Project Name
+author email@example.com
+
+currency usd
+time_unit day
+acceptance_percent 10
+
+risks low=1.1 medium=1.5 high=2
+
+desired_duration 1mth
+
+team
+b  rate=80 title=Blockchain
+be rate=40
+fe rate=30
+qa rate=20 formula=(be+fe)*0.3
+pm rate=50 formula=fe*0.33
+
+tasks
+Initial   |Research       | be=3 fe=3  risks=low
+Initial   |Bootstrap      | be=1 fe=10 risks=medium
+Blockchain| Smart contract| b=5        risks=medium
+API       | API task 1    | be=20      risks=high
+API	      | API task 2    | be=2
