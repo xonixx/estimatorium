@@ -27,17 +27,11 @@ type projParsed struct {
 type resourceRecord struct {
 	id            string
 	resourceProps map[string]string
-	//cnt     int
-	//rate    float64
-	//title   string
-	//formula string
 }
 
 type taskRecord struct {
-	category string
-	title    string
-	//efforts  map[string]float64
-	//risk     string
+	category  string
+	title     string
 	taskProps map[string]string
 }
 
@@ -212,63 +206,6 @@ func ProjectFromString(projData string) (Project, error) {
 		}
 	}
 
-	//ratesM := map[string]float64{}
-	//formulaM := map[string]string{}
-	//teamM := map[string]int{}
-
-	/*	{
-			rates := projParsed.getKVPairs(directiveRates)
-			if rates != nil {
-				for k, v := range *rates {
-					float, err := strconv.ParseFloat(v, 32)
-					if err != nil || float < 0 {
-						errors.addError("Wrong rate value for " + k + ": " + v)
-					}
-					ratesM[k] = float
-				}
-			}
-		}
-
-		{
-			formula := projParsed.getKVPairs(directiveFormula)
-			if formula != nil {
-				for k, v := range *formula {
-					formulaM[k] = v
-				}
-			}
-		}
-
-		{
-			team := projParsed.getKVPairs(directiveTeam)
-			if team != nil {
-				for k, v := range *team {
-					intVal, err := strconv.ParseInt(v, 10, 32)
-					if err != nil || intVal < 0 {
-						errors.addError("Wrong team count value for " + k + ": " + v)
-					}
-					teamM[k] = int(intVal)
-				}
-			} else {
-				// use standard team
-				for r, _ := range standardResourceTypes {
-					teamM[r] = 1
-				}
-			}
-		}*/
-
-	//resourcesM := map[string]*Resource{}
-	/*for i, resourceRecord := range projParsed.team {
-		resourcesM[resourceRecord.id] = &Resource{Id: rId, Count: cnt, Title: standardResourceTypes[rId]}
-	}
-
-	for rId, rate := range ratesM {
-		resourcesM[rId].Rate = rate
-	}
-
-	for rId, formula := range formulaM {
-		resourcesM[rId].Formula = formula
-	}*/
-
 	for _, r := range projParsed.team {
 		title := r.resourceProps["title"]
 		resourceId := r.id
@@ -401,47 +338,20 @@ func parseProj(projData string) (projParsed, error) {
 			if len(taskParts) != 3 {
 				panic("task should have format: cat | title | efforts") // TODO convert to error
 			}
-			/*efforts := map[string]float64{}
-			for k, v := range keyValPairs {
-				if k != "risks" {
-					float, err := strconv.ParseFloat(v, 32)
-					checkErr(err)
-					efforts[k] = float
-				}
-			}*/
 			projParsed.tasksRecords = append(projParsed.tasksRecords, taskRecord{
-				category: strings.TrimSpace(taskParts[0]),
-				title:    strings.TrimSpace(taskParts[1]),
-				//efforts:  efforts,
-				//risk:     keyValPairs["risks"],
+				category:  strings.TrimSpace(taskParts[0]),
+				title:     strings.TrimSpace(taskParts[1]),
 				taskProps: parseKeyValPairs(taskParts[2]),
 			})
 		} else if mode == pmTeam {
+			keyValPairs := map[string]string{}
+			if len(parts) > 1 {
+				keyValPairs = parseKeyValPairs(parts[1])
+			}
 			projParsed.team = append(projParsed.team, resourceRecord{
 				id:            parts[0],
-				resourceProps: parseKeyValPairs(parts[1]),
+				resourceProps: keyValPairs,
 			})
-			/*var cnt int
-			if cntStr, exists := resourceProps["cnt"]; exists {
-				cnt = errors.intOrAddError(cntStr, "Wrong team count value for %s: %s", resourceId, cntStr)
-				if cnt < 0 {
-					errors.addError(fmt.Sprintf("Team count must be >= 0 for %s: %s", resourceId, cntStr))
-				}
-			}
-			var rate float64
-			if rateStr, exists := resourceProps["rate"]; exists {
-				rate = errors.floatOrAddErrorf(rateStr, "Wrong rate value for %s: %s", resourceId, rateStr)
-				if rate < 0 {
-					errors.addError(fmt.Sprintf("Rate must be >= 0 for %s: %s", resourceId, rateStr))
-				}
-			}
-			projParsed.team = append(projParsed.team, resourceRecord{
-				id:      resourceId,
-				cnt:     cnt,
-				rate:    rate,
-				title:   resourceProps["title"],
-				formula: resourceProps["formula"],
-			})*/
 		} else {
 			panic("Unknown mode")
 		}

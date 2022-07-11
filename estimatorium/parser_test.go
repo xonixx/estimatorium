@@ -147,6 +147,9 @@ func TestDesiredDuration(t *testing.T) {
 	project := mustNoError(t, `
 time_unit day
 desired_duration 1mth
+team
+be
+fe
 tasks
 a|b|be=35 fe=2 risks=low
 `)
@@ -163,7 +166,10 @@ func TestDesiredDurationWithDerived(t *testing.T) {
 	project := mustNoError(t, `
 time_unit day
 desired_duration 1mth
-formula qa=be
+team
+be
+fe
+qa formula=be
 tasks
 a|b|be=35 fe=2 risks=low
 `)
