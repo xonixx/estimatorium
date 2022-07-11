@@ -17,7 +17,8 @@ qa cnt=1 rate=20 formula=(be+fe)*0.3
 pm cnt=1 rate=50 formula=fe*0.33
 
 tasks
-Initial	|Research 		| be=3 fe=3  risks=low
-Initial	|Bootstrap		| be=1 fe=10 risks=medium
-API		| API task 1	| be=20      risks=high
-API		| API task 2 	| be=2 
+Initial   |Research       | be=3 fe=3  risks=low
+Initial   |Bootstrap      | be=1 fe=10 risks=medium
+Blockchain| Smart contract| b=5        risks=medium
+API       | API task 1    | be=20      risks=high
+API	      | API task 2    | be=2

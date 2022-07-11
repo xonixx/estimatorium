@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/xuri/excelize/v2"
 	"math"
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
@@ -276,7 +277,8 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		} else {
 			formula := r.Formula
 			for _, r1 := range project.TeamExcludingDerived() {
-				formula = strings.Replace(formula, r1.Id, "SUM("+tasksTableInfo.cellRanges[r1.Id].String()+")", -1)
+				rIdRe := regexp.MustCompile("\\b" + r1.Id + "\\b")
+				formula = rIdRe.ReplaceAllString(formula, "SUM("+tasksTableInfo.cellRanges[r1.Id].String()+")")
 			}
 			effortsFormula = formula
 		}
@@ -297,7 +299,8 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		} else {
 			formula := r.Formula
 			for _, r1 := range project.TeamExcludingDerived() {
-				formula = strings.Replace(formula, r1.Id, "SUM("+tasksTableInfo.cellRangesWithRisk[r1.Id].String()+")", -1)
+				rIdRe := regexp.MustCompile("\\b" + r1.Id + "\\b")
+				formula = rIdRe.ReplaceAllString(formula, "SUM("+tasksTableInfo.cellRangesWithRisk[r1.Id].String()+")")
 			}
 			effortsWithRisksFormula = formula
 		}
