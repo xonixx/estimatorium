@@ -212,9 +212,9 @@ func ProjectFromString(projData string) (Project, error) {
 		}
 	}
 
-	ratesM := map[string]float64{}
-	formulaM := map[string]string{}
-	teamM := map[string]int{}
+	//ratesM := map[string]float64{}
+	//formulaM := map[string]string{}
+	//teamM := map[string]int{}
 
 	/*	{
 			rates := projParsed.getKVPairs(directiveRates)
@@ -256,9 +256,9 @@ func ProjectFromString(projData string) (Project, error) {
 			}
 		}*/
 
-	resourcesM := map[string]*Resource{}
-	for rId, cnt := range teamM {
-		resourcesM[rId] = &Resource{Id: rId, Count: cnt, Title: standardResourceTypes[rId]}
+	//resourcesM := map[string]*Resource{}
+	/*for i, resourceRecord := range projParsed.team {
+		resourcesM[resourceRecord.id] = &Resource{Id: rId, Count: cnt, Title: standardResourceTypes[rId]}
 	}
 
 	for rId, rate := range ratesM {
@@ -267,10 +267,35 @@ func ProjectFromString(projData string) (Project, error) {
 
 	for rId, formula := range formulaM {
 		resourcesM[rId].Formula = formula
-	}
+	}*/
 
-	for _, resource := range resourcesM {
-		proj.Team = append(proj.Team, *resource)
+	for _, r := range projParsed.team {
+		title := r.resourceProps["title"]
+		resourceId := r.id
+		if title == "" {
+			title = standardResourceTypes[resourceId]
+		}
+		var cnt int
+		if cntStr, exists := r.resourceProps["cnt"]; exists {
+			cnt = errors.intOrAddError(cntStr, "Wrong team count value for %s: %s", resourceId, cntStr)
+			if cnt < 0 {
+				errors.addError(fmt.Sprintf("Team count must be >= 0 for %s: %s", resourceId, cntStr))
+			}
+		}
+		var rate float64
+		if rateStr, exists := r.resourceProps["rate"]; exists {
+			rate = errors.floatOrAddErrorf(rateStr, "Wrong rate value for %s: %s", resourceId, rateStr)
+			if rate < 0 {
+				errors.addError(fmt.Sprintf("Rate must be >= 0 for %s: %s", resourceId, rateStr))
+			}
+		}
+		proj.Team = append(proj.Team, Resource{
+			Id:      resourceId,
+			Title:   title,
+			Rate:    rate,
+			Count:   cnt,
+			Formula: r.resourceProps["formula"],
+		})
 	}
 
 	for _, taskRecord := range projParsed.tasksRecords {

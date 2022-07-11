@@ -70,7 +70,7 @@ func mustNoError(t *testing.T, s string) Project {
 	fmt.Println(project)
 	fmt.Println(err)
 	if err != nil {
-		t.Fatalf("should be error")
+		t.Fatalf("should NOT be error")
 	}
 	return project
 }
