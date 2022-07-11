@@ -14,10 +14,10 @@ type Project struct {
 	Author            string
 	TimeUnit          TimeUnit
 	Currency          Currency
-	AcceptancePercent float32 // "Cleanup & acceptance" parameter
+	AcceptancePercent float64 // "Cleanup & acceptance" parameter
 	Team              []Resource
 	DesiredDuration   Duration // This will be treated as including risks
-	Risks             map[string]float32
+	Risks             map[string]float64
 	Tasks             []Task
 }
 
@@ -47,12 +47,12 @@ func (p Project) ResourceById(rId string) *Resource {
 }
 
 type Duration struct {
-	duration float32
+	duration float64
 	unit     TimeUnit
 }
 
-func (d Duration) ToHours() float32 {
-	return float32(d.unit.ToHours()) * d.duration
+func (d Duration) ToHours() float64 {
+	return float64(d.unit.ToHours()) * d.duration
 }
 
 // ParseDuration should parse "10mth", "3 days", ".5weeks"
@@ -69,7 +69,7 @@ func ParseDuration(str string) (Duration, error) {
 					return Duration{}, err
 				}
 				return Duration{
-					duration: float32(float),
+					duration: float,
 					unit:     timeUnit,
 				}, nil
 			}
@@ -90,11 +90,11 @@ type Task struct {
 	Category string
 	Title    string
 	Risk     string
-	Work     map[string]float32 // resource -> time units
+	Work     map[string]float64 // resource -> time units
 }
 
-func StandardRisks() map[string]float32 {
-	return map[string]float32{
+func StandardRisks() map[string]float64 {
+	return map[string]float64{
 		"low":     1.1,
 		"medium":  1.5,
 		"high":    2,
@@ -102,7 +102,7 @@ func StandardRisks() map[string]float32 {
 	}
 }
 
-func RiskLabels(risks map[string]float32) []string {
+func RiskLabels(risks map[string]float64) []string {
 	var keys []string
 	for k := range risks {
 		keys = append(keys, k)

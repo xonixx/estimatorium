@@ -19,7 +19,23 @@ type directiveVals struct {
 
 type projParsed struct {
 	directives   map[string]directiveVals // each directive can go at most one time
+	team         []resourceRecord
 	tasksRecords []taskRecord
+}
+
+type resourceRecord struct {
+	id      string
+	cnt     int
+	rate    float64
+	title   string
+	formula string
+}
+
+type taskRecord struct {
+	category string
+	title    string
+	efforts  map[string]float64
+	risk     string
 }
 
 func (projParsed projParsed) getSingleVal(directive directiveDef) *string {
@@ -33,6 +49,7 @@ func (projParsed projParsed) getSingleVal(directive directiveDef) *string {
 		panic(v.directiveType)
 	}
 }
+
 func (projParsed projParsed) getKVPairs(directive directiveDef) *map[string]string {
 	v, exists := projParsed.directives[directive.name]
 	if !exists {
@@ -43,13 +60,6 @@ func (projParsed projParsed) getKVPairs(directive directiveDef) *map[string]stri
 	} else {
 		panic(v.directiveType)
 	}
-}
-
-type taskRecord struct {
-	category string
-	title    string
-	efforts  map[string]float32
-	risk     string
 }
 
 type directiveType int8
@@ -162,20 +172,20 @@ func ProjectFromString(projData string) (Project, error) {
 			if err != nil || float < 0 || float > 100 {
 				errors.addError("Wrong acceptance_percent: " + *acceptancePercent)
 			}
-			proj.AcceptancePercent = float32(float)
+			proj.AcceptancePercent = float64(float)
 		}
 	}
 
 	{
 		risks := projParsed.getKVPairs(directiveRisks)
 		if risks != nil {
-			proj.Risks = map[string]float32{}
+			proj.Risks = map[string]float64{}
 			for k, v := range *risks {
 				float, err := strconv.ParseFloat(v, 32)
 				if err != nil || float < 1 {
 					errors.addError("Wrong risk value for " + k + ": " + v)
 				}
-				proj.Risks[k] = float32(float)
+				proj.Risks[k] = float64(float)
 			}
 		} else {
 			// apply default risks
@@ -336,12 +346,12 @@ func parseProj(projData string) (projParsed, error) {
 				panic("task should have format: cat | title | efforts") // TODO convert to error
 			}
 			keyValPairs := parseKeyValPairs(taskParts[2])
-			efforts := map[string]float32{}
+			efforts := map[string]float64{}
 			for k, v := range keyValPairs {
 				if k != "risks" {
 					float, err := strconv.ParseFloat(v, 32)
 					checkErr(err)
-					efforts[k] = float32(float)
+					efforts[k] = float64(float)
 				}
 			}
 			projParsed.tasksRecords = append(projParsed.tasksRecords, taskRecord{

@@ -16,10 +16,10 @@ func (p *Project) Calculate() ProjectCalculationResult {
 	desiredDuration := p.DesiredDuration
 	desiredDurationHrs := desiredDuration.ToHours()
 
-	work := map[string]float32{}
+	work := map[string]float64{}
 	for _, task := range p.Tasks {
 		for resId, effort := range task.Work {
-			work[resId] += effort * float32(p.TimeUnit.ToHours()) * p.Risks[task.Risk]
+			work[resId] += effort * float64(p.TimeUnit.ToHours()) * p.Risks[task.Risk]
 		}
 	}
 
@@ -28,7 +28,7 @@ func (p *Project) Calculate() ProjectCalculationResult {
 		workOfRes := work[resource.Id]
 		if workOfRes > 0 {
 			cntF := workOfRes / desiredDurationHrs
-			cnt := int(math.Ceil(float64(cntF)))
+			cnt := int(math.Ceil(cntF))
 			resource1 := resource
 			resource1.Count = cnt
 			calculatedTeam = append(calculatedTeam, resource1)

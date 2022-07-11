@@ -237,7 +237,7 @@ type parametersTableInfo struct {
 	acceptancePercentCell string
 }
 
-func generateParametersTable(exc *excelGenerator, acceptancePercent float32) parametersTableInfo {
+func generateParametersTable(exc *excelGenerator, acceptancePercent float64) parametersTableInfo {
 	res := parametersTableInfo{}
 	exc.setValAndNext("Cleanup & acceptance")
 	res.acceptancePercentCell = exc.currentCellAbs(true)
@@ -381,7 +381,7 @@ func generateDurationsTableHeader(exc *excelGenerator) {
 	})
 }
 
-func risksFormula(risks map[string]float32, valCell string, risksCell string) string {
+func risksFormula(risks map[string]float64, valCell string, risksCell string) string {
 	// =ROUNDUP(D6*SWITCH($F6,"",1, "Low", 1.1, "Medium", 1.5, "High", 2, "Extreme", 5))
 	var sb strings.Builder
 	sb.WriteString("ROUNDUP(")
