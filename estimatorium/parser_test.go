@@ -123,13 +123,23 @@ team be=1
 tasks
 a|b|zz=1`)
 }
-func TestNoTeam(t *testing.T) {
+func TestDesiredDuration(t *testing.T) {
 	mustNoError(t, `
 time_unit day
 desired_duration 1mth
 tasks
 a|b|be=35 fe=2 risks=low
-`)
+`) // TODO check team be=2 fe=1
+}
+
+func TestDesiredDurationWithDerived(t *testing.T) {
+	mustNoError(t, `
+time_unit day
+desired_duration 1mth
+formula qa=be
+tasks
+a|b|be=35 fe=2 risks=low
+`) // TODO check team be=2 fe=1 qa=1
 }
 
 //func TestParsing3(t *testing.T) {
