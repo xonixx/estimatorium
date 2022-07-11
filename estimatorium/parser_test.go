@@ -128,7 +128,7 @@ func TestNoTeam(t *testing.T) {
 time_unit day
 desired_duration 1mth
 tasks
-a|b|be=1 fe=2 risks=low
+a|b|be=35 fe=2 risks=low
 `)
 }
 
