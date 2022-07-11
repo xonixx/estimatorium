@@ -1,6 +1,7 @@
 package estimatorium
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -81,10 +82,10 @@ var (
 	directiveTimeUnit          = newDirectiveDef("time_unit", DtSingleValue)
 	directiveAcceptancePercent = newDirectiveDef("acceptance_percent", DtSingleValue)
 	directiveRisks             = newDirectiveDef("risks", DtKeyVal)
-	directiveRates             = newDirectiveDef("rates", DtKeyVal)
-	directiveFormula           = newDirectiveDef("formula", DtKeyVal)
-	directiveDesiredDuration   = newDirectiveDef("desired_duration", DtSingleValue)
-	directiveTeam              = newDirectiveDef("team", DtKeyVal)
+	//directiveRates             = newDirectiveDef("rates", DtKeyVal)
+	//directiveFormula           = newDirectiveDef("formula", DtKeyVal)
+	directiveDesiredDuration = newDirectiveDef("desired_duration", DtSingleValue)
+	//directiveTeam              = newDirectiveDef("team", DtKeyVal)
 )
 
 var directives = map[string]directiveDef{}
@@ -107,8 +108,22 @@ type ProjectParseError struct {
 func (ppe *ProjectParseError) hasErrors() bool {
 	return len(ppe.errors) > 0
 }
-func (ppe *ProjectParseError) addError(err string) {
-	ppe.errors = append(ppe.errors, err)
+func (ppe *ProjectParseError) addError(error string) {
+	ppe.errors = append(ppe.errors, error)
+}
+func (ppe *ProjectParseError) intOrAddError(v string, errorF string, args ...interface{}) int {
+	intVal, err := strconv.ParseInt(v, 10, 32)
+	if err != nil {
+		ppe.addError(fmt.Sprintf(errorF, args...))
+	}
+	return int(intVal)
+}
+func (ppe *ProjectParseError) floatOrAddError(v string, errorF string, args ...interface{}) float64 {
+	float, err := strconv.ParseFloat(v, 32)
+	if err != nil {
+		ppe.addError(fmt.Sprintf(errorF, args...))
+	}
+	return float
 }
 func (ppe *ProjectParseError) Error() string {
 	return strings.Join(ppe.errors, "\n")
@@ -172,7 +187,7 @@ func ProjectFromString(projData string) (Project, error) {
 			if err != nil || float < 0 || float > 100 {
 				errors.addError("Wrong acceptance_percent: " + *acceptancePercent)
 			}
-			proj.AcceptancePercent = float64(float)
+			proj.AcceptancePercent = float
 		}
 	}
 
@@ -185,7 +200,7 @@ func ProjectFromString(projData string) (Project, error) {
 				if err != nil || float < 1 {
 					errors.addError("Wrong risk value for " + k + ": " + v)
 				}
-				proj.Risks[k] = float64(float)
+				proj.Risks[k] = float
 			}
 		} else {
 			// apply default risks
@@ -197,45 +212,45 @@ func ProjectFromString(projData string) (Project, error) {
 	formulaM := map[string]string{}
 	teamM := map[string]int{}
 
-	{
-		rates := projParsed.getKVPairs(directiveRates)
-		if rates != nil {
-			for k, v := range *rates {
-				float, err := strconv.ParseFloat(v, 32)
-				if err != nil || float < 0 {
-					errors.addError("Wrong rate value for " + k + ": " + v)
+	/*	{
+			rates := projParsed.getKVPairs(directiveRates)
+			if rates != nil {
+				for k, v := range *rates {
+					float, err := strconv.ParseFloat(v, 32)
+					if err != nil || float < 0 {
+						errors.addError("Wrong rate value for " + k + ": " + v)
+					}
+					ratesM[k] = float
 				}
-				ratesM[k] = float
 			}
 		}
-	}
 
-	{
-		formula := projParsed.getKVPairs(directiveFormula)
-		if formula != nil {
-			for k, v := range *formula {
-				formulaM[k] = v
-			}
-		}
-	}
-
-	{
-		team := projParsed.getKVPairs(directiveTeam)
-		if team != nil {
-			for k, v := range *team {
-				intVal, err := strconv.ParseInt(v, 10, 32)
-				if err != nil || intVal < 0 {
-					errors.addError("Wrong team count value for " + k + ": " + v)
+		{
+			formula := projParsed.getKVPairs(directiveFormula)
+			if formula != nil {
+				for k, v := range *formula {
+					formulaM[k] = v
 				}
-				teamM[k] = int(intVal)
-			}
-		} else {
-			// use standard team
-			for r, _ := range standardResourceTypes {
-				teamM[r] = 1
 			}
 		}
-	}
+
+		{
+			team := projParsed.getKVPairs(directiveTeam)
+			if team != nil {
+				for k, v := range *team {
+					intVal, err := strconv.ParseInt(v, 10, 32)
+					if err != nil || intVal < 0 {
+						errors.addError("Wrong team count value for " + k + ": " + v)
+					}
+					teamM[k] = int(intVal)
+				}
+			} else {
+				// use standard team
+				for r, _ := range standardResourceTypes {
+					teamM[r] = 1
+				}
+			}
+		}*/
 
 	resourcesM := map[string]*Resource{}
 	for rId, cnt := range teamM {
@@ -296,6 +311,7 @@ type parseMode int
 
 const (
 	pmDirectives parseMode = iota
+	pmTeam
 	pmTasks
 )
 
@@ -322,12 +338,14 @@ func parseProj(projData string) (projParsed, error) {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.Index(line, "#") == 0 {
 			continue
-		}
-		parts := spaceRe.Split(line, 2)
-		if parts[0] == "tasks" {
+		} else if line == "tasks" {
 			mode = pmTasks
 			continue
+		} else if line == "team" {
+			mode = pmTeam
+			continue
 		}
+		parts := spaceRe.Split(line, 2)
 		if mode == pmDirectives {
 			if directive, found := directives[parts[0]]; found {
 				if _, exists := projParsed.directives[directive.name]; exists {
@@ -351,7 +369,7 @@ func parseProj(projData string) (projParsed, error) {
 				if k != "risks" {
 					float, err := strconv.ParseFloat(v, 32)
 					checkErr(err)
-					efforts[k] = float64(float)
+					efforts[k] = float
 				}
 			}
 			projParsed.tasksRecords = append(projParsed.tasksRecords, taskRecord{
@@ -359,6 +377,30 @@ func parseProj(projData string) (projParsed, error) {
 				title:    strings.TrimSpace(taskParts[1]),
 				efforts:  efforts,
 				risk:     keyValPairs["risks"],
+			})
+		} else if mode == pmTeam {
+			resourceId := parts[0]
+			resourceProps := parseKeyValPairs(parts[1])
+			var cnt int
+			if cntStr, exists := resourceProps["cnt"]; exists {
+				cnt = errors.intOrAddError(cntStr, "Wrong team count value for %s: %s", resourceId, cntStr)
+				if cnt < 0 {
+					errors.addError(fmt.Sprintf("Team count must be >= 0 for %s: %s", resourceId, cntStr))
+				}
+			}
+			var rate float64
+			if rateStr, exists := resourceProps["rate"]; exists {
+				rate = errors.floatOrAddError(rateStr, "Wrong rate value for %s: %s", resourceId, rateStr)
+				if rate < 0 {
+					errors.addError(fmt.Sprintf("Rate must be >= 0 for %s: %s", resourceId, rateStr))
+				}
+			}
+			projParsed.team = append(projParsed.team, resourceRecord{
+				id:      resourceId,
+				cnt:     cnt,
+				rate:    rate,
+				title:   resourceProps["title"],
+				formula: resourceProps["formula"],
 			})
 		} else {
 			panic("Unknown mode")

@@ -9,23 +9,25 @@ const projData = `
 project Project Name
 author email@example.com
 
-# params currency=usd time_unit=day acceptancePercent=10
 currency usd
 time_unit day
 acceptance_percent 10
 
 risks low=1.1 medium=1.5 high=2
-rates be=40 fe=30 qa=20
-formula qa=(be+fe)*0.3 pm=fe*0.33
 
-desired_duration 3mth
-team be=2 fe=1 qa=1 pm=1
+#desired_duration 1mth
+
+team
+b  cnt=1 rate=80 title=Blockchain
+be cnt=2 rate=40
+fe cnt=1 rate=30
+qa cnt=1 rate=20 formula=(be+fe)*0.3
+pm cnt=1 rate=50 formula=fe*0.33
 
 tasks
-
-Initial	|Research 		| be=3 fe=3 risks=low
-Initial	|Bootstrap		| be=1 fe=1 risks=low
-API		| API task 1	| be=2 
+Initial	|Research 		| be=3 fe=3  risks=low
+Initial	|Bootstrap		| be=1 fe=10 risks=medium
+API		| API task 1	| be=20      risks=high
 API		| API task 2 	| be=2 
 `
 
