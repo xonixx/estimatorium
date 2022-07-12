@@ -20,3 +20,12 @@ It's clear how to estimate tasks in terms of developer efforts (back, front, dev
 And the roles like QA / PM are easier to tie with an empirical formula to the dev efforts. Not on per-task basis.
 
 It seems logical that, say, QA's amount of work should be proportional to devs work, since QA needs to test all the features they deliver.
+
+## Usage
+
+```
+./estimator                      # no args = show help
+./estimator -v/--version         # show version
+./estimator -h/--help            # show help
+./estimator proj.txt report.xls  # do the job 
+```
