@@ -1,4 +1,6 @@
 # estimatorium
+[![Tests](https://github.com/xonixx/estimatorium/actions/workflows/tests.yml/badge.svg)](https://github.com/xonixx/estimatorium/actions/workflows/tests.yml)
+
 Model to estimate software projects
 
 ## What is this?
