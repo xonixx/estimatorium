@@ -46,9 +46,6 @@ jobs:
 #        with:
 #          go-version: ${{ matrix.go }}
 #
-#      - name: Install Gawk
-#        run: choco install gawk
-#
 #      - name: Build and Test
 #        run: |
 #          go test -race ./...
@@ -69,9 +66,6 @@ jobs:
 #        uses: actions/setup-go@v2
 #        with:
 #          go-version: ${{ matrix.go }}
-#
-#      - name: Install Gawk
-#        run: brew install gawk
 #
 #      - name: Build and Test
 #        run: |
