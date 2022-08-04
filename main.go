@@ -35,5 +35,8 @@ func main() {
 		project.Calculate()
 		fmt.Println(project)
 		estimatorium.GenerateExcel(project, realArgs[1])
+	} else {
+		fmt.Printf("I don't understand...\n%s\n", usage)
+		os.Exit(1)
 	}
 }
