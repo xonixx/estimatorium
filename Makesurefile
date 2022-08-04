@@ -1,0 +1,9 @@
+# vim: syntax=bash
+
+@goal test
+@doc 'run unit tests'
+  go test ./...
+
+@goal update_deps
+@doc 'update go dependencies'
+  go get -t -u ./...
