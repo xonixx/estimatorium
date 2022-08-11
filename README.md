@@ -22,8 +22,8 @@ It seems logical that, say, QA's amount of work should be proportional to devs w
 ## Usage
 
 ```
-./estimator                      # no args = show help
-./estimator -v/--version         # show version
-./estimator -h/--help            # show help
-./estimator proj.txt report.xls  # do the job 
+./estimatorium                      # no args = show help
+./estimatorium -v/--version         # show version
+./estimatorium -h/--help            # show help
+./estimatorium proj.txt report.xls  # do the job 
 ```

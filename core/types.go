@@ -1,4 +1,4 @@
-package estimatorium
+package core
 
 import (
 	"errors"
