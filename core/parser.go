@@ -290,13 +290,17 @@ const (
 	pmTasks
 )
 
-func parseKeyValPairs(str string) map[string]string {
+func parseKeyValPairs(str string, errors *ProjectParseError) map[string]string {
 	str = strings.TrimSpace(str)
 	values := map[string]string{}
 	valParts := spaceRe.Split(str, -1)
 	for _, valPart := range valParts {
 		keyVal := strings.SplitN(valPart, "=", 2)
-		values[keyVal[0]] = keyVal[1]
+		if len(keyVal) < 2 {
+			errors.addErrorf("wrong key=value: %s", valPart)
+		} else {
+			values[keyVal[0]] = keyVal[1]
+		}
 	}
 	return values
 }
@@ -328,7 +332,7 @@ func parseProj(projData string) (projParsed, error) {
 				} else if directive.directiveType == DtSingleValue {
 					projParsed.directives[directive.name] = directiveVals{directiveDef: directive, value: strings.TrimSpace(parts[1])}
 				} else if directive.directiveType == DtKeyVal {
-					projParsed.directives[directive.name] = directiveVals{directiveDef: directive, values: parseKeyValPairs(parts[1])}
+					projParsed.directives[directive.name] = directiveVals{directiveDef: directive, values: parseKeyValPairs(parts[1], errors)}
 				}
 			} else {
 				errors.addError("Unknown directive: " + parts[0])
@@ -341,12 +345,12 @@ func parseProj(projData string) (projParsed, error) {
 			projParsed.tasksRecords = append(projParsed.tasksRecords, taskRecord{
 				category:  strings.TrimSpace(taskParts[0]),
 				title:     strings.TrimSpace(taskParts[1]),
-				taskProps: parseKeyValPairs(taskParts[2]),
+				taskProps: parseKeyValPairs(taskParts[2], errors),
 			})
 		} else if mode == pmTeam {
 			keyValPairs := map[string]string{}
 			if len(parts) > 1 {
-				keyValPairs = parseKeyValPairs(parts[1])
+				keyValPairs = parseKeyValPairs(parts[1], errors)
 			}
 			projParsed.team = append(projParsed.team, resourceRecord{
 				id:            parts[0],

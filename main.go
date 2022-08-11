@@ -30,7 +30,8 @@ func main() {
 		projectStr := string(bytes)
 		project, err := core.ProjectFromString(projectStr)
 		if err != nil {
-			panic(err)
+			fmt.Printf("%v", err)
+			os.Exit(1)
 		}
 		project.Calculate()
 		fmt.Println(project)
