@@ -340,7 +340,7 @@ func parseProj(projData string) (projParsed, error) {
 		} else if mode == pmTasks {
 			taskParts := strings.Split(line, "|")
 			if len(taskParts) != 3 {
-				panic("task should have format: cat | title | efforts") // TODO convert to error
+				errors.addErrorf("task should have format: cat | title | efforts")
 			}
 			projParsed.tasksRecords = append(projParsed.tasksRecords, taskRecord{
 				category:  strings.TrimSpace(taskParts[0]),
