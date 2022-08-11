@@ -183,7 +183,7 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 			endCatCell = exc.currentCell()
 			currCat = t.Category
 		} else if currCat != t.Category {
-			fmt.Printf("merging: %s, %s\n", startCatCell, endCatCell)
+			//fmt.Printf("merging: %s, %s\n", startCatCell, endCatCell)
 			checkErr(exc.f.MergeCell(exc.sheet, startCatCell, endCatCell))
 			currCat = t.Category
 			startCatCell = exc.currentCell()
@@ -228,7 +228,7 @@ func generateTasksTable(exc *excelGenerator, project Project) tasksTableInfo {
 		}
 		exc.cr()
 	}
-	fmt.Printf("merging: %s, %s\n", startCatCell, endCatCell)
+	//fmt.Printf("merging: %s, %s\n", startCatCell, endCatCell)
 	checkErr(exc.f.MergeCell(exc.sheet, startCatCell, endCatCell))
 
 	return res
