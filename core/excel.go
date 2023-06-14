@@ -267,7 +267,8 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		isLast := i == len(project.Team)-1
 		if isFirst {
 			effortsRange.hCell = exc.currentCell()
-		} else if isLast {
+		}
+		if isLast {
 			effortsRange.vCell = exc.currentCell()
 		}
 		res.costsData[r.Id] = &resourceCostsCells{effortsCell: exc.currentCell()}
@@ -288,7 +289,8 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		exc.setFormulaAndNext(effortsFormula)
 		if isFirst {
 			effortsWithRiskRange.hCell = exc.currentCell()
-		} else if isLast {
+		}
+		if isLast {
 			effortsWithRiskRange.vCell = exc.currentCell()
 		}
 		effortsWithRisksCell := exc.currentCell()
@@ -314,7 +316,8 @@ func generateCostsTable(exc *excelGenerator, project Project, tasksTableInfo tas
 		exc.setValAndNext(r.Count)
 		if isFirst {
 			totalsRange.hCell = exc.currentCell()
-		} else if isLast {
+		}
+		if isLast {
 			totalsRange.vCell = exc.currentCell()
 		}
 		exc.setFormulaAndNext(fmt.Sprintf("%d*%s*%s",
